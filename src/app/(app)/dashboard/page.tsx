@@ -22,6 +22,7 @@ import {
   type MacroGoals,
 } from "@/lib/calculators";
 import { formatNumber } from "@/lib/utils";
+import { syncMyScores } from "@/app/(app)/community/actions";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -48,9 +49,10 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [profileRes, dietRes] = await Promise.all([
+  const [profileRes, dietRes, scores] = await Promise.all([
     supabase.from("profiles").select("*").eq("user_id", user!.id).single(),
     supabase.from("dietary_profiles").select("*").eq("user_id", user!.id).single(),
+    syncMyScores(),
   ]);
 
   const profile = profileRes.data;
@@ -161,13 +163,13 @@ export default async function DashboardPage() {
           />
           <StatCard
             label="Active streak"
-            value="0"
-            sub="days in a row"
-            icon={<span className="text-xs font-bold">🔥</span>}
+            value={`${scores.streak}`}
+            sub={scores.streak === 1 ? "day in a row" : "days in a row"}
+            icon={<Flame size={16} />}
           />
           <StatCard
             label="Workouts"
-            value="0"
+            value={`${scores.workoutsWeekly}`}
             sub="this week"
             icon={<Dumbbell size={16} />}
           />

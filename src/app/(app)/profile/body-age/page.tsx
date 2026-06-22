@@ -51,8 +51,6 @@ export default async function BodyAgePage() {
   const latest = assessments[0] ?? null;
   const hasProfile = profile?.sex && profile?.date_of_birth;
 
-  const [showTest, setShowTest] = [false, () => {}]; // server default — test is revealed via URL
-
   return (
     <div className="flex flex-col min-h-full">
       <div className="px-8 py-5 border-b flex items-center gap-4" style={{ borderColor: 'var(--color-border-subtle)' }}>

@@ -15,7 +15,6 @@ import {
   FlaskConical,
   User,
   Settings,
-  Trophy,
   LogOut,
   type LucideIcon,
 } from "lucide-react";
@@ -56,10 +55,7 @@ const NAV: NavSection[] = [
   },
   {
     label: "Compete",
-    items: [
-      { label: "Community", href: "/community", icon: Users },
-      { label: "Leaderboard", href: "/community/leaderboard", icon: Trophy },
-    ],
+    items: [{ label: "Community", href: "/community", icon: Users }],
   },
   {
     label: "Learn",
@@ -97,7 +93,7 @@ export function Sidebar({
 
   function isActive(href: string) {
     if (href === "/dashboard") return pathname === "/dashboard";
-    return pathname.startsWith(href);
+    return pathname === href || pathname.startsWith(href + "/");
   }
 
   return (
