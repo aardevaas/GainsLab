@@ -107,7 +107,7 @@ export default async function RecipesPage({ searchParams }: { searchParams: Sear
                 <Link
                   key={recipe.id}
                   href={`/recipes/${recipe.id}`}
-                  className="group rounded-xl border overflow-hidden hover:border-[var(--color-accent)] transition-colors"
+                  className="card-interactive group rounded-xl border overflow-hidden"
                   style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
                 >
                   <div className="relative h-36 overflow-hidden" style={{ background: 'var(--color-surface-elevated)' }}>

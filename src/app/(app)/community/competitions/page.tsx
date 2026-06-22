@@ -48,7 +48,7 @@ export default async function CompetitionsPage() {
     return (
       <Link
         href={`/community/competitions/${comp.id}`}
-        className="block rounded-xl border p-5 transition-all hover:border-[var(--color-accent)]"
+        className="card-interactive block rounded-xl border p-5"
         style={{ background: 'var(--color-surface)', borderColor: isJoined ? 'var(--color-accent)' : 'var(--color-border)' }}
       >
         <div className="flex items-start justify-between gap-4">

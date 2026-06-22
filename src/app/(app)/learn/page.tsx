@@ -110,7 +110,7 @@ export default async function LearnPage({ searchParams }: Props) {
               <Link
                 key={article.slug}
                 href={`/learn/${article.slug}`}
-                className="group rounded-2xl p-5 border flex flex-col gap-3 transition-all"
+                className="card-interactive group rounded-2xl p-5 border flex flex-col gap-3"
                 style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
               >
                 <div className="flex items-start justify-between gap-3">

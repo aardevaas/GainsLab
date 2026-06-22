@@ -55,7 +55,7 @@ export default async function SavedRecipesPage() {
                 <Link
                   key={row.id}
                   href={`/recipes/${row.recipe_id}`}
-                  className="group rounded-xl border overflow-hidden hover:border-[var(--color-accent)] transition-colors"
+                  className="card-interactive group rounded-xl border overflow-hidden"
                   style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
                 >
                   <div className="relative h-36 overflow-hidden" style={{ background: 'var(--color-surface-elevated)' }}>

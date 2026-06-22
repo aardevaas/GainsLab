@@ -368,7 +368,7 @@ export default async function DashboardPage() {
                   <Link
                     key={action.href}
                     href={action.href}
-                    className="group flex flex-col gap-2 p-4 rounded-xl border transition-all duration-200"
+                    className="card-interactive group flex flex-col gap-2 p-4 rounded-xl border"
                     style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}
                   >
                     <div

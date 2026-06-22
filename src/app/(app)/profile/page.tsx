@@ -76,7 +76,7 @@ export default async function ProfilePage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 max-w-2xl">
           <Link
             href="/profile/macros"
-            className="group flex items-center gap-3 rounded-2xl p-4 border transition-colors"
+            className="card-interactive group flex items-center gap-3 rounded-2xl p-4 border"
             style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
           >
             <div
@@ -94,7 +94,7 @@ export default async function ProfilePage() {
 
           <Link
             href="/profile/body-age"
-            className="group flex items-center gap-3 rounded-2xl p-4 border transition-colors"
+            className="card-interactive group flex items-center gap-3 rounded-2xl p-4 border"
             style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
           >
             <div

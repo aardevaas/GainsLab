@@ -76,7 +76,7 @@ export default async function CommunityPage() {
         {featured && (
           <Link
             href={`/community/competitions/${featured.id}`}
-            className="block rounded-xl border p-5 transition-all hover:border-[var(--color-accent)]"
+            className="card-interactive card-interactive-glow block rounded-xl border p-5"
             style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
           >
             <div className="flex items-start justify-between gap-4">
@@ -137,7 +137,7 @@ export default async function CommunityPage() {
               <Link
                 key={card.href}
                 href={card.href}
-                className="flex items-start gap-4 rounded-xl border p-5 transition-all hover:border-[var(--color-accent)]"
+                className="card-interactive flex items-start gap-4 rounded-xl border p-5"
                 style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
               >
                 <div className="shrink-0 size-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--color-surface-elevated)' }}>

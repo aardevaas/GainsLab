@@ -179,7 +179,7 @@ function NavCard({ href, icon, title, desc }: { href: string; icon: React.ReactN
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 p-4 rounded-xl border transition-all"
+      className="card-interactive flex items-center gap-3 p-4 rounded-xl border"
       style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
     >
       <div

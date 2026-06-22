@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { PageTransition } from "@/components/layout/PageTransition";
 
 export default async function AppLayout({
   children,
@@ -29,7 +30,7 @@ export default async function AppLayout({
         onboardingComplete={profile?.onboarding_completed ?? false}
       />
       <div className="flex-1 flex flex-col pt-14 lg:pt-0 lg:ml-[var(--sidebar-width)]">
-        {children}
+        <PageTransition>{children}</PageTransition>
       </div>
     </div>
   );
