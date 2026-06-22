@@ -2,13 +2,14 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, AlertCircle, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import {
   feetInchesToCm,
   cmToFeetInches,
   lbsToKg,
   kgToLbs,
 } from '@/lib/calculators';
+import { useToast } from '@/components/ui/toast/ToastProvider';
 import { updateProfile, type ProfileInput } from './actions';
 
 type Units = 'metric' | 'imperial';
@@ -62,9 +63,8 @@ function fieldStyle() {
 
 export function ProfileForm({ initial }: Props) {
   const router = useRouter();
+  const toast = useToast();
   const [isPending, startTransition] = useTransition();
-  const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle');
-  const [message, setMessage] = useState<string | null>(null);
 
   const [name, setName] = useState(initial.name);
   const [username, setUsername] = useState(initial.username);
@@ -92,17 +92,13 @@ export function ProfileForm({ initial }: Props) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setStatus('idle');
-    setMessage(null);
 
     if (!sex || !goal || !activity) {
-      setStatus('error');
-      setMessage('Please complete all fields.');
+      toast.error('Please complete all fields.');
       return;
     }
     if (heightCm == null || weightKg == null) {
-      setStatus('error');
-      setMessage('Please enter your height and weight.');
+      toast.error('Please enter your height and weight.');
       return;
     }
 
@@ -122,13 +118,10 @@ export function ProfileForm({ initial }: Props) {
     startTransition(async () => {
       const result = await updateProfile(input);
       if (result.ok) {
-        setStatus('saved');
-        setMessage('Profile saved');
+        toast.success('Profile saved');
         router.refresh();
-        setTimeout(() => setStatus('idle'), 2500);
       } else {
-        setStatus('error');
-        setMessage(result.error ?? 'Something went wrong');
+        toast.error(result.error ?? 'Something went wrong');
       }
     });
   }
@@ -402,17 +395,6 @@ export function ProfileForm({ initial }: Props) {
           {isPending ? <Loader2 size={16} className="animate-spin" /> : null}
           {isPending ? 'Saving…' : 'Save changes'}
         </button>
-
-        {status === 'saved' && (
-          <span className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: 'var(--color-accent)' }}>
-            <Check size={15} /> {message}
-          </span>
-        )}
-        {status === 'error' && (
-          <span className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: 'var(--color-danger)' }}>
-            <AlertCircle size={15} /> {message}
-          </span>
-        )}
       </div>
     </form>
   );

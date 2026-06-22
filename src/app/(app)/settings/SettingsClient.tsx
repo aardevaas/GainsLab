@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, AlertCircle, Loader2, LogOut, Trash2, Lock } from 'lucide-react';
+import { Loader2, LogOut, Trash2, Lock } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { useToast } from '@/components/ui/toast/ToastProvider';
 import { deleteAccountData } from './actions';
 
 const fieldCls = 'w-full h-10 rounded-xl px-3 text-sm outline-none transition-colors focus:ring-1';
@@ -16,32 +17,26 @@ const fieldStyle = {
 export function SettingsClient() {
   const router = useRouter();
   const supabase = createClient();
+  const toast = useToast();
 
   // Password change
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [pwStatus, setPwStatus] = useState<'idle' | 'saved' | 'error'>('idle');
-  const [pwMessage, setPwMessage] = useState<string | null>(null);
   const [pwPending, setPwPending] = useState(false);
 
   // Delete
   const [confirmText, setConfirmText] = useState('');
-  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, startDelete] = useTransition();
 
   async function handlePasswordChange(e: React.FormEvent) {
     e.preventDefault();
-    setPwStatus('idle');
-    setPwMessage(null);
 
     if (password.length < 8) {
-      setPwStatus('error');
-      setPwMessage('Password must be at least 8 characters');
+      toast.error('Password must be at least 8 characters');
       return;
     }
     if (password !== confirm) {
-      setPwStatus('error');
-      setPwMessage('Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
 
@@ -50,15 +45,12 @@ export function SettingsClient() {
     setPwPending(false);
 
     if (error) {
-      setPwStatus('error');
-      setPwMessage(error.message);
+      toast.error(error.message);
       return;
     }
-    setPwStatus('saved');
-    setPwMessage('Password updated');
+    toast.success('Password updated');
     setPassword('');
     setConfirm('');
-    setTimeout(() => setPwStatus('idle'), 2500);
   }
 
   async function handleSignOut() {
@@ -68,12 +60,11 @@ export function SettingsClient() {
   }
 
   function handleDelete() {
-    setDeleteError(null);
     startDelete(async () => {
       const result = await deleteAccountData();
       // On success the action redirects; only an error returns here.
       if (result && !result.ok) {
-        setDeleteError(result.error ?? 'Something went wrong');
+        toast.error(result.error ?? 'Something went wrong');
       }
     });
   }
@@ -132,16 +123,6 @@ export function SettingsClient() {
               {pwPending && <Loader2 size={15} className="animate-spin" />}
               Update password
             </button>
-            {pwStatus === 'saved' && (
-              <span className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: 'var(--color-accent)' }}>
-                <Check size={15} /> {pwMessage}
-              </span>
-            )}
-            {pwStatus === 'error' && (
-              <span className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: 'var(--color-danger)' }}>
-                <AlertCircle size={15} /> {pwMessage}
-              </span>
-            )}
           </div>
         </form>
       </section>
@@ -200,11 +181,6 @@ export function SettingsClient() {
             Delete my data
           </button>
         </div>
-        {deleteError && (
-          <p className="mt-3 flex items-center gap-1.5 text-sm" style={{ color: 'var(--color-danger)' }}>
-            <AlertCircle size={15} /> {deleteError}
-          </p>
-        )}
       </section>
     </div>
   );
