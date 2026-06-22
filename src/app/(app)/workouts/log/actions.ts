@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { updateWorkoutCompetitions } from '@/app/(app)/community/competitions/actions';
 
 type SetLog = {
   exerciseName: string;
@@ -55,7 +56,11 @@ export async function completeSession(
     );
   }
 
+  // Update scores for any workout-type competitions the user has joined
+  await updateWorkoutCompetitions(user.id);
+
   revalidatePath('/tracker/habits');
+  revalidatePath('/community/leaderboard');
   revalidatePath('/workouts');
   redirect('/workouts');
 }
