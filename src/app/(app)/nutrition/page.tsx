@@ -19,16 +19,20 @@ export default async function NutritionPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
+  // The (app) layout redirects unauthenticated users; guard so this never
+  // throws if it renders before that redirect resolves.
+  if (!user) return null;
+
   const today = todayStr();
 
   const [profileRes, dietRes, logRes, weekRes] = await Promise.all([
-    supabase.from('profiles').select('*').eq('user_id', user!.id).single(),
-    supabase.from('dietary_profiles').select('macro_preset').eq('user_id', user!.id).single(),
-    supabase.from('food_logs').select('*').eq('user_id', user!.id).eq('date', today),
+    supabase.from('profiles').select('*').eq('user_id', user.id).single(),
+    supabase.from('dietary_profiles').select('macro_preset').eq('user_id', user.id).single(),
+    supabase.from('food_logs').select('*').eq('user_id', user.id).eq('date', today),
     supabase
       .from('food_logs')
       .select('date, calories')
-      .eq('user_id', user!.id)
+      .eq('user_id', user.id)
       .gte('date', (() => {
         const d = new Date();
         d.setDate(d.getDate() - 6);
@@ -101,7 +105,9 @@ export default async function NutritionPage() {
         </Link>
       </div>
 
-      <div className="flex-1 px-8 py-6 space-y-6 max-w-3xl">
+      <div className="flex-1 px-8 py-6">
+        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
         {/* Calorie ring card */}
         <div
           className="rounded-xl border p-6 flex items-center gap-8"
@@ -194,9 +200,10 @@ export default async function NutritionPage() {
             })}
           </div>
         </div>
+        </div>
 
-        {/* Quick nav */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* Quick nav (sidebar column) */}
+        <div className="grid grid-cols-2 lg:grid-cols-1 gap-4 content-start">
           <QuickCard
             href="/nutrition/log"
             icon={<UtensilsCrossed size={18} />}
@@ -221,6 +228,7 @@ export default async function NutritionPage() {
             title="Macro targets"
             desc="Full analysis"
           />
+        </div>
         </div>
       </div>
     </div>

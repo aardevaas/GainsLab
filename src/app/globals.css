@@ -110,19 +110,20 @@ img, video { max-width: 100%; display: block; }
 .card-interactive:hover {
   transform: translateY(-3px);
   box-shadow:
-    0 10px 28px -6px rgba(0, 0, 0, 0.5),
-    0 0 0 1px var(--color-accent);
+    0 12px 30px -8px rgba(0, 0, 0, 0.6),
+    0 0 0 1.5px var(--color-accent),
+    0 0 22px -6px var(--color-accent-glow);
 }
 .card-interactive:active {
   transform: translateY(-1px);
 }
 
-/* Accent-glow variant for primary surfaces */
+/* Accent-glow variant for primary surfaces — stronger halo */
 .card-interactive-glow:hover {
   box-shadow:
-    0 12px 32px -6px rgba(0, 0, 0, 0.5),
-    0 0 0 1px var(--color-accent),
-    0 0 24px -4px var(--color-accent-glow);
+    0 14px 36px -8px rgba(0, 0, 0, 0.6),
+    0 0 0 1.5px var(--color-accent),
+    0 0 36px -4px var(--color-accent-glow);
 }
 
 /* ── Entrance animation ── */

@@ -83,10 +83,14 @@ export async function getRandomRecipes(count = 6): Promise<RecipeSummary[]> {
         .then(d => d.meals[0] ? toSummary(d.meals[0]) : null)
     )
   );
-  return results
+  const summaries = results
     .filter((r): r is PromiseFulfilledResult<RecipeSummary | null> => r.status === 'fulfilled')
     .map(r => r.value)
     .filter((r): r is RecipeSummary => r !== null);
+
+  // random.php can return the same meal more than once across parallel calls —
+  // dedupe by id so React keys stay unique.
+  return Array.from(new Map(summaries.map(s => [s.id, s])).values());
 }
 
 export async function getCategories(): Promise<string[]> {
