@@ -39,23 +39,36 @@ export async function updateProfile(input: ProfileInput): Promise<ProfileActionR
   if (!user) return { ok: false, error: 'Not signed in' };
 
   const v = parsed.data;
+  // Upsert (not update): an account created before the profiles table existed
+  // — or any edge case where the signup trigger didn't run — has no row yet.
+  // Upsert creates-or-updates so the save always persists.
   const { error } = await supabase
     .from('profiles')
-    .update({
-      name: v.name,
-      username: v.username || null,
-      sex: v.sex,
-      date_of_birth: v.date_of_birth,
-      height_cm: v.height_cm,
-      weight_kg: v.weight_kg,
-      goal: v.goal,
-      activity_level: v.activity_level,
-      units: v.units,
-      avatar_url: v.avatar_url || null,
-    })
-    .eq('user_id', user.id);
+    .upsert(
+      {
+        user_id: user.id,
+        name: v.name,
+        username: v.username || null,
+        sex: v.sex,
+        date_of_birth: v.date_of_birth,
+        height_cm: v.height_cm,
+        weight_kg: v.weight_kg,
+        goal: v.goal,
+        activity_level: v.activity_level,
+        units: v.units,
+        avatar_url: v.avatar_url || null,
+        onboarding_completed: true,
+      },
+      { onConflict: 'user_id' },
+    );
 
   if (error) {
+    console.error('[updateProfile] save failed', {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
     if (error.code === '23505') {
       return { ok: false, error: 'That username is already taken' };
     }
