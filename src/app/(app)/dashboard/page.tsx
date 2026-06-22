@@ -49,9 +49,13 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // The (app) layout redirects unauthenticated users; guard here so the page
+  // never throws if it renders before that redirect resolves (e.g. mid-login).
+  if (!user) return null;
+
   const [profileRes, dietRes, scores] = await Promise.all([
-    supabase.from("profiles").select("*").eq("user_id", user!.id).single(),
-    supabase.from("dietary_profiles").select("*").eq("user_id", user!.id).single(),
+    supabase.from("profiles").select("*").eq("user_id", user.id).single(),
+    supabase.from("dietary_profiles").select("*").eq("user_id", user.id).single(),
     syncMyScores(),
   ]);
 

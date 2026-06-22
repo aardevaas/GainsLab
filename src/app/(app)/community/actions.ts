@@ -1,6 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 
 function weekBounds(): { start: string; end: string } {
@@ -75,6 +74,10 @@ export async function syncMyScores(): Promise<MyScores> {
     ),
   ]);
 
-  revalidatePath('/community/leaderboard');
+  // Note: no revalidatePath here — this runs during page render (dashboard,
+  // community, leaderboard, etc.), where cache invalidation is illegal and
+  // unnecessary (these pages are dynamic and read fresh data). Mutations that
+  // change scores (e.g. workout logging) revalidate /community/leaderboard
+  // from their own server actions.
   return { streak, workoutsWeekly, nutritionWeekly };
 }
