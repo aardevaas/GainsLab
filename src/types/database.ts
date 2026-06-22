@@ -27,8 +27,9 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'created_at' | 'updated_at'>;
+        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'id' | 'created_at' | 'updated_at'> & { id?: string };
         Update: Partial<Database['public']['Tables']['profiles']['Insert']>;
+        Relationships: [];
       };
       dietary_profiles: {
         Row: {
@@ -43,8 +44,9 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['dietary_profiles']['Row'], 'created_at' | 'updated_at'>;
+        Insert: Omit<Database['public']['Tables']['dietary_profiles']['Row'], 'id' | 'created_at' | 'updated_at'> & { id?: string };
         Update: Partial<Database['public']['Tables']['dietary_profiles']['Insert']>;
+        Relationships: [];
       };
       body_measurements: {
         Row: {
@@ -65,8 +67,9 @@ export type Database = {
           notes: string | null;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['body_measurements']['Row'], 'created_at'>;
+        Insert: Omit<Database['public']['Tables']['body_measurements']['Row'], 'id' | 'created_at'> & { id?: string };
         Update: Partial<Database['public']['Tables']['body_measurements']['Insert']>;
+        Relationships: [];
       };
       food_logs: {
         Row: {
@@ -88,8 +91,9 @@ export type Database = {
           sodium_mg: number | null;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['food_logs']['Row'], 'created_at'>;
+        Insert: Omit<Database['public']['Tables']['food_logs']['Row'], 'id' | 'created_at'> & { id?: string };
         Update: Partial<Database['public']['Tables']['food_logs']['Insert']>;
+        Relationships: [];
       };
       workout_plans: {
         Row: {
@@ -104,8 +108,9 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['workout_plans']['Row'], 'created_at' | 'updated_at'>;
+        Insert: Omit<Database['public']['Tables']['workout_plans']['Row'], 'id' | 'created_at' | 'updated_at'> & { id?: string };
         Update: Partial<Database['public']['Tables']['workout_plans']['Insert']>;
+        Relationships: [];
       };
       workout_days: {
         Row: {
@@ -116,8 +121,9 @@ export type Database = {
           muscle_focus: string[];
           order: number;
         };
-        Insert: Database['public']['Tables']['workout_days']['Row'];
+        Insert: Omit<Database['public']['Tables']['workout_days']['Row'], 'id'> & { id?: string };
         Update: Partial<Database['public']['Tables']['workout_days']['Insert']>;
+        Relationships: [];
       };
       workout_exercises: {
         Row: {
@@ -133,8 +139,9 @@ export type Database = {
           notes: string | null;
           order: number;
         };
-        Insert: Database['public']['Tables']['workout_exercises']['Row'];
+        Insert: Omit<Database['public']['Tables']['workout_exercises']['Row'], 'id'> & { id?: string };
         Update: Partial<Database['public']['Tables']['workout_exercises']['Insert']>;
+        Relationships: [];
       };
       workout_sessions: {
         Row: {
@@ -148,8 +155,9 @@ export type Database = {
           completed: boolean;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['workout_sessions']['Row'], 'created_at'>;
+        Insert: Omit<Database['public']['Tables']['workout_sessions']['Row'], 'id' | 'created_at'> & { id?: string };
         Update: Partial<Database['public']['Tables']['workout_sessions']['Insert']>;
+        Relationships: [];
       };
       session_sets: {
         Row: {
@@ -163,8 +171,9 @@ export type Database = {
           duration_seconds: number | null;
           notes: string | null;
         };
-        Insert: Database['public']['Tables']['session_sets']['Row'];
+        Insert: Omit<Database['public']['Tables']['session_sets']['Row'], 'id'> & { id?: string };
         Update: Partial<Database['public']['Tables']['session_sets']['Insert']>;
+        Relationships: [];
       };
       progress_photos: {
         Row: {
@@ -176,8 +185,9 @@ export type Database = {
           is_public: boolean;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['progress_photos']['Row'], 'created_at'>;
+        Insert: Omit<Database['public']['Tables']['progress_photos']['Row'], 'id' | 'created_at'> & { id?: string };
         Update: Partial<Database['public']['Tables']['progress_photos']['Insert']>;
+        Relationships: [];
       };
       sleep_logs: {
         Row: {
@@ -189,8 +199,9 @@ export type Database = {
           notes: string | null;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['sleep_logs']['Row'], 'created_at'>;
+        Insert: Omit<Database['public']['Tables']['sleep_logs']['Row'], 'id' | 'created_at'> & { id?: string };
         Update: Partial<Database['public']['Tables']['sleep_logs']['Insert']>;
+        Relationships: [];
       };
       saved_recipes: {
         Row: {
@@ -202,8 +213,9 @@ export type Database = {
           notes: string | null;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['saved_recipes']['Row'], 'created_at'>;
+        Insert: Omit<Database['public']['Tables']['saved_recipes']['Row'], 'id' | 'created_at'> & { id?: string };
         Update: Partial<Database['public']['Tables']['saved_recipes']['Insert']>;
+        Relationships: [];
       };
       liked_dishes: {
         Row: {
@@ -214,8 +226,9 @@ export type Database = {
           recipe_snapshot: Json | null;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['liked_dishes']['Row'], 'created_at'>;
+        Insert: Omit<Database['public']['Tables']['liked_dishes']['Row'], 'id' | 'created_at'> & { id?: string };
         Update: Partial<Database['public']['Tables']['liked_dishes']['Insert']>;
+        Relationships: [];
       };
       grocery_lists: {
         Row: {
@@ -227,8 +240,9 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['grocery_lists']['Row'], 'created_at' | 'updated_at'>;
+        Insert: Omit<Database['public']['Tables']['grocery_lists']['Row'], 'id' | 'created_at' | 'updated_at'> & { id?: string };
         Update: Partial<Database['public']['Tables']['grocery_lists']['Insert']>;
+        Relationships: [];
       };
       grocery_items: {
         Row: {
@@ -240,8 +254,9 @@ export type Database = {
           is_checked: boolean;
           category: string | null;
         };
-        Insert: Database['public']['Tables']['grocery_items']['Row'];
+        Insert: Omit<Database['public']['Tables']['grocery_items']['Row'], 'id'> & { id?: string };
         Update: Partial<Database['public']['Tables']['grocery_items']['Insert']>;
+        Relationships: [];
       };
       competitions: {
         Row: {
@@ -255,8 +270,9 @@ export type Database = {
           is_active: boolean;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['competitions']['Row'], 'created_at'>;
+        Insert: Omit<Database['public']['Tables']['competitions']['Row'], 'id' | 'created_at'> & { id?: string };
         Update: Partial<Database['public']['Tables']['competitions']['Insert']>;
+        Relationships: [];
       };
       competition_entries: {
         Row: {
@@ -267,8 +283,9 @@ export type Database = {
           joined_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['competition_entries']['Row'], 'updated_at'>;
+        Insert: Omit<Database['public']['Tables']['competition_entries']['Row'], 'id' | 'updated_at'> & { id?: string };
         Update: Partial<Database['public']['Tables']['competition_entries']['Insert']>;
+        Relationships: [];
       };
       leaderboard_scores: {
         Row: {
@@ -279,8 +296,9 @@ export type Database = {
           period: 'weekly' | 'monthly' | 'all_time';
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['leaderboard_scores']['Row'], 'updated_at'>;
+        Insert: Omit<Database['public']['Tables']['leaderboard_scores']['Row'], 'id' | 'updated_at'> & { id?: string };
         Update: Partial<Database['public']['Tables']['leaderboard_scores']['Insert']>;
+        Relationships: [];
       };
       body_age_assessments: {
         Row: {
@@ -296,8 +314,9 @@ export type Database = {
           chronological_age: number | null;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['body_age_assessments']['Row'], 'created_at'>;
+        Insert: Omit<Database['public']['Tables']['body_age_assessments']['Row'], 'id' | 'created_at'> & { id?: string };
         Update: Partial<Database['public']['Tables']['body_age_assessments']['Insert']>;
+        Relationships: [];
       };
       subscriptions: {
         Row: {
@@ -311,8 +330,9 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['subscriptions']['Row'], 'created_at' | 'updated_at'>;
+        Insert: Omit<Database['public']['Tables']['subscriptions']['Row'], 'id' | 'created_at' | 'updated_at'> & { id?: string };
         Update: Partial<Database['public']['Tables']['subscriptions']['Insert']>;
+        Relationships: [];
       };
     };
     Views: Record<string, never>;
