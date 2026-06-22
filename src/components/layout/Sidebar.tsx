@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -16,6 +17,8 @@ import {
   User,
   Settings,
   LogOut,
+  Menu,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -81,9 +84,15 @@ export function Sidebar({
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const displayName = profileName ?? userEmail.split("@")[0];
   const initials = displayName.slice(0, 2).toUpperCase();
+
+  // Close the mobile drawer whenever the route changes.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -97,29 +106,83 @@ export function Sidebar({
   }
 
   return (
-    <aside
-      className="fixed left-0 top-0 bottom-0 flex flex-col border-r z-40"
-      style={{
-        width: "var(--sidebar-width)",
-        background: "var(--color-bg-secondary)",
-        borderColor: "var(--color-border-subtle)",
-      }}
-    >
-      {/* Logo */}
+    <>
+      {/* Mobile top bar (hidden on lg+) */}
       <div
-        className="flex items-center gap-2.5 px-5 h-16 border-b shrink-0"
-        style={{ borderColor: "var(--color-border-subtle)" }}
+        className="lg:hidden fixed top-0 left-0 right-0 h-14 z-30 flex items-center justify-between px-4 border-b"
+        style={{
+          background: "var(--color-bg-secondary)",
+          borderColor: "var(--color-border-subtle)",
+        }}
       >
-        <div
-          className="size-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0"
-          style={{ background: "var(--color-accent)", color: "var(--color-bg)" }}
+        <Link href="/dashboard" className="flex items-center gap-2.5">
+          <div
+            className="size-7 rounded-lg flex items-center justify-center font-bold text-xs"
+            style={{ background: "var(--color-accent)", color: "var(--color-bg)" }}
+          >
+            G
+          </div>
+          <span className="font-bold text-base" style={{ color: "var(--color-text)" }}>
+            Gains<span style={{ color: "var(--color-accent)" }}>Lab</span>
+          </span>
+        </Link>
+        <button
+          onClick={() => setMobileOpen(true)}
+          aria-label="Open menu"
+          className="p-2 rounded-lg transition-colors hover:bg-[var(--color-surface)]"
         >
-          G
-        </div>
-        <span className="font-bold text-base" style={{ color: "var(--color-text)" }}>
-          Gains<span style={{ color: "var(--color-accent)" }}>Lab</span>
-        </span>
+          <Menu size={20} style={{ color: "var(--color-text)" }} />
+        </button>
       </div>
+
+      {/* Backdrop when drawer open (mobile only) */}
+      {mobileOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-40"
+          style={{ background: "rgba(0,0,0,0.6)" }}
+          onClick={() => setMobileOpen(false)}
+          aria-hidden
+        />
+      )}
+
+      <aside
+        className={cn(
+          "fixed left-0 top-0 bottom-0 flex flex-col border-r z-50",
+          "transition-transform duration-300 ease-out lg:transition-none",
+          "lg:translate-x-0",
+          mobileOpen ? "translate-x-0" : "-translate-x-full",
+        )}
+        style={{
+          width: "var(--sidebar-width)",
+          background: "var(--color-bg-secondary)",
+          borderColor: "var(--color-border-subtle)",
+        }}
+      >
+        {/* Logo */}
+        <div
+          className="flex items-center justify-between gap-2.5 px-5 h-16 border-b shrink-0"
+          style={{ borderColor: "var(--color-border-subtle)" }}
+        >
+          <div className="flex items-center gap-2.5">
+            <div
+              className="size-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0"
+              style={{ background: "var(--color-accent)", color: "var(--color-bg)" }}
+            >
+              G
+            </div>
+            <span className="font-bold text-base" style={{ color: "var(--color-text)" }}>
+              Gains<span style={{ color: "var(--color-accent)" }}>Lab</span>
+            </span>
+          </div>
+          {/* Close button (mobile only) */}
+          <button
+            onClick={() => setMobileOpen(false)}
+            aria-label="Close menu"
+            className="lg:hidden p-1.5 rounded-lg transition-colors hover:bg-[var(--color-surface)]"
+          >
+            <X size={18} style={{ color: "var(--color-text-secondary)" }} />
+          </button>
+        </div>
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-6">
@@ -242,6 +305,7 @@ export function Sidebar({
           </button>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

@@ -28,7 +28,7 @@ export default async function AppLayout({
         avatarUrl={profile?.avatar_url ?? null}
         onboardingComplete={profile?.onboarding_completed ?? false}
       />
-      <div className="flex-1 flex flex-col" style={{ marginLeft: "var(--sidebar-width)" }}>
+      <div className="flex-1 flex flex-col pt-14 lg:pt-0 lg:ml-[var(--sidebar-width)]">
         {children}
       </div>
     </div>
