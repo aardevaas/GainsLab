@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Activity, Scale, Camera, Moon, TrendingUp } from 'lucide-react';
+import { Activity, Scale, Camera, Moon, TrendingUp, Flame, HeartPulse } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { WeightChart } from './WeightChart';
 import { formatNumber } from '@/lib/utils';
@@ -142,6 +142,8 @@ export default async function TrackerPage() {
           <NavCard href="/tracker/habits" icon={<Activity size={18} />} title="Habit calendar" desc="90-day activity heatmap" />
           <NavCard href="/tracker/photos" icon={<Camera size={18} />} title="Progress photos" desc="Visual transformation" />
           <NavCard href="/tracker/sleep" icon={<Moon size={18} />} title="Sleep log" desc="Track recovery quality" />
+          <NavCard href="/tracker/calories" icon={<Flame size={18} />} title="Calorie dashboard" desc="30-day intake vs TDEE" />
+          <NavCard href="/profile/body-age" icon={<HeartPulse size={18} />} title="Body age score" desc="5-test fitness assessment" />
         </div>
       </div>
     </div>
