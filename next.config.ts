@@ -1,7 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      { hostname: "www.themealdb.com" },
+      { hostname: "spoonacular.com" },
+      { hostname: "*.supabase.co" },
+    ],
+  },
+  experimental: {
+    optimizePackageImports: ["lucide-react", "recharts", "framer-motion"],
+  },
 };
 
 export default nextConfig;
