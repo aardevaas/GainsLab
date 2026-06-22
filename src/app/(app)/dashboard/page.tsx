@@ -22,6 +22,8 @@ import {
   type MacroGoals,
 } from "@/lib/calculators";
 import { formatNumber } from "@/lib/utils";
+import { sumMacros, type FoodLogEntry } from "@/lib/nutrition/types";
+import { CalorieRing } from "@/components/ui/CalorieRing";
 import { syncMyScores } from "@/app/(app)/community/actions";
 import type { Metadata } from "next";
 
@@ -53,13 +55,17 @@ export default async function DashboardPage() {
   // never throws if it renders before that redirect resolves (e.g. mid-login).
   if (!user) return null;
 
-  const [profileRes, dietRes, scores] = await Promise.all([
+  const todayIso = new Date().toISOString().split("T")[0];
+
+  const [profileRes, dietRes, scores, todayLogRes] = await Promise.all([
     supabase.from("profiles").select("*").eq("user_id", user.id).single(),
     supabase.from("dietary_profiles").select("*").eq("user_id", user.id).single(),
     syncMyScores(),
+    supabase.from("food_logs").select("*").eq("user_id", user.id).eq("date", todayIso),
   ]);
 
   const profile = profileRes.data;
+  const todayTotals = sumMacros((todayLogRes.data ?? []) as FoodLogEntry[]);
   const macroPreset = (dietRes.data?.macro_preset ?? "balanced") as MacroPreset;
 
   const firstName = profile?.name?.split(" ")[0] ?? "there";
@@ -178,6 +184,68 @@ export default async function DashboardPage() {
             icon={<Dumbbell size={16} />}
           />
         </div>
+
+        {/* Today's intake */}
+        {macros && (
+          <div
+            className="rounded-xl border p-5"
+            style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold text-sm" style={{ color: "var(--color-text)" }}>
+                Today&apos;s intake
+              </h2>
+              <Link
+                href="/nutrition/log"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
+                style={{ background: "var(--color-accent)", color: "#0a0c0f" }}
+              >
+                <UtensilsCrossed size={12} /> Log food
+              </Link>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <CalorieRing
+                percent={(todayTotals.calories / macros.maintenance.calories) * 100}
+                value={formatNumber(todayTotals.calories)}
+                label={`of ${formatNumber(macros.maintenance.calories)}`}
+              />
+
+              <div className="flex-1 w-full space-y-3">
+                <MacroProgress
+                  label="Protein"
+                  consumed={todayTotals.proteinG}
+                  goal={macros.maintenance.proteinG}
+                  color="#4ade80"
+                />
+                <MacroProgress
+                  label="Carbs"
+                  consumed={todayTotals.carbsG}
+                  goal={macros.maintenance.carbsG}
+                  color="#60a5fa"
+                />
+                <MacroProgress
+                  label="Fat"
+                  consumed={todayTotals.fatG}
+                  goal={macros.maintenance.fatG}
+                  color="#fbbf24"
+                />
+              </div>
+
+              <div
+                className="text-center px-4 py-3 rounded-lg shrink-0 w-full sm:w-auto"
+                style={{ background: "var(--color-bg)" }}
+              >
+                <p className="text-2xl font-bold" style={{ color: "var(--color-accent)", letterSpacing: "-0.02em" }}>
+                  {formatNumber(Math.max(0, macros.maintenance.calories - todayTotals.calories))}
+                </p>
+                <p className="text-[10px] mt-0.5" style={{ color: "var(--color-text-muted)" }}>
+                  kcal remaining
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main grid */}
         <div className="grid lg:grid-cols-5 gap-6">
@@ -386,6 +454,34 @@ function MacroBar({
         <span className="text-xs font-semibold" style={{ color: "var(--color-text)" }}>
           {formatNumber(grams)}g{" "}
           <span style={{ color: "var(--color-text-muted)", fontWeight: 400 }}>({pct}%)</span>
+        </span>
+      </div>
+      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
+        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
+      </div>
+    </div>
+  );
+}
+
+function MacroProgress({
+  label,
+  consumed,
+  goal,
+  color,
+}: {
+  label: string;
+  consumed: number;
+  goal: number;
+  color: string;
+}) {
+  const pct = goal > 0 ? Math.min(100, Math.round((consumed / goal) * 100)) : 0;
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs font-medium" style={{ color: "var(--color-text-secondary)" }}>{label}</span>
+        <span className="text-xs font-semibold" style={{ color: "var(--color-text)" }}>
+          {formatNumber(consumed)}
+          <span style={{ color: "var(--color-text-muted)", fontWeight: 400 }}> / {formatNumber(goal)}g</span>
         </span>
       </div>
       <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
