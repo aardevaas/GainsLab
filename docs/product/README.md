@@ -28,6 +28,11 @@ Each section spec has the same shape:
 `Today` is written by Claude from the code. `Target` and the answers to
 `Open questions` come from you — that's the vision we're capturing.
 
+## The plan
+
+- **[Build Roadmap](roadmap.md)** — the phased sequence from today to the
+  creator-led ecosystem, with model/effort per phase and the MVP milestone.
+
 ## The order we define things
 
 1. **[Strategic Foundation](00-strategy.md)** — the frame everything ladders up to.
@@ -45,7 +50,7 @@ Each section spec has the same shape:
 
 | Doc | State |
 |-----|-------|
-| Strategic Foundation | 🟡 Competitive landscape done; vision sections awaiting you |
+| Strategic Foundation | 🟢 Vision + competitive landscape complete |
 | Nutrition | 🟡 Today filled — awaiting Target |
 | Workouts | 🟡 Today filled — awaiting Target |
 | Progress Tracker | 🟡 Today filled — awaiting Target |
