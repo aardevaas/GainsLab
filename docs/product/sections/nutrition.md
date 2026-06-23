@@ -75,13 +75,19 @@ why GainsLab feels like a coach, not a spreadsheet.
 - Adopt a creator's or AI meal plan → day auto-populates → adjust → log.
 - Browse/cook a recipe → log it → ingredients flow to grocery.
 
-## Open decision — the one genuine fork  ⚠️
-**Food database source of truth.** We hold 6 API keys. My recommendation, optimized
-for *accuracy + LatAm + free barcode*:
-- **USDA FoodData Central** — verified whole-food data (authoritative, free) → the "science-backed" trust core.
-- **FatSecret** *(or Nutritionix)* — large international branded/restaurant DB with solid regional (incl. LatAm) coverage → everyday breadth.
-- **Open Food Facts** — global, open barcode DB → strong packaged-goods + LatAm coverage, keeps barcode free.
+## Food data sources — LOCKED (free-first, upgrade later)
 
-This is the one Nutrition choice I'd confirm with you before Phase 1 build (it
-shapes the food data layer). Everything else above is locked. *(Recommend:
-proceed with this trio unless you have a preferred provider.)*
+**Starting trio (all free):**
+- **USDA FoodData Central** — verified whole foods + US branded → the science-backed *trust core*; "verified" badge in search.
+- **Open Food Facts** — open global barcode DB → packaged goods + strong LatAm coverage; keeps barcode **free** (MFP paywalled it = our wedge).
+- **FatSecret (free Basic tier)** — international (~50+ countries, Spanish/LatAm), restaurant + branded breadth. Key already in env.
+
+**Deferred to the paid-upgrade phase:** **CalorieKing** (commercial/licensed, not
+free — strong US restaurant data, revisit when we upgrade). Nutritionix / Edamam /
+CalorieNinjas keys exist → kept as fallbacks only; **do not wire all six** (dedup cost).
+
+**Architecture (so paid swaps are config, not rework):**
+1. `FoodProvider` interface (`search`, `getByBarcode`, `getById`) — one adapter per API.
+2. **Normalization layer** → canonical `FoodItem` (calories, protein/carbs/fat, serving) = the Gains Score contract shape.
+3. **Search orchestration** — barcode: Open Food Facts → USDA; text: FatSecret + USDA merged & deduped, USDA badged **"verified."**
+4. **Local cache (`foods` table)** — cache every fetched item → beat free-tier rate limits *and* grow a proprietary food DB asset over time.

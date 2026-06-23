@@ -17,31 +17,60 @@ today and did I progress" into a guided, tracked loop.
 - **`/exercises`** — exercise library (search/browse; "800+ exercises" claimed).
 - Plans have difficulty, goal, days/week metadata.
 
-## Target  **[YOU]**
-> _What should Workouts become? How does it beat Hevy/Strong/Fitbod? Is the
-> edge in the building, the logging, the progression intelligence, or the
-> integration with nutrition/recovery?_
+## Target  *(synthesized — react/adjust)*
 
-## Information & hierarchy  **[YOU]**
-> _When a user opens Workouts, what's the primary action — start today's session,
-> or manage plans? What does a logged-in returning user see first?_
+Workouts must be **as good to log in as Hevy** (non-negotiable — it's the price of
+entry; creators won't bring audiences to a worse logger) **plus** the two things
+Hevy/Fitbod/Strong structurally can't do:
+
+- **vs Hevy/Strong:** match the beloved logging UX, then add the layers they lack —
+  nutrition-aware recovery, the whole-athlete picture, and creators.
+- **vs Fitbod:** progression intelligence too — but **informed by the connected
+  data Fitbod can't see** (your nutrition + sleep + recovery), so the
+  recommendation is *"you under-ate and slept 5h — hold weight today,"* not a
+  blind muscle-recovery guess.
+
+**The wedge is the creator linchpin in training:**
+> Creators publish **programs/routines** their community adopts in one tap — the
+> member's plan, sessions, and progression all live in GainsLab. This is the
+> training half of the creator economy; the plan builder must be **dual-mode:
+> personal *and* creator-authored-and-published.**
+
+**Locked decisions** (resolving the open questions):
+- **Logging parity with Hevy** = table stakes: rest timers, supersets/circuits, RPE/RIR, PRs, per-exercise history, plate math. Build to match, then exceed.
+- **Goal training frequency gets a durable home.** ⭐ Hard requirement from the
+  Gains Score contract (the Training pillar's `weeklyPace` needs the target). Lives
+  on the plan (sessions/week) and/or profile — snapshot like the nutrition target.
+- **Progression intelligence: v1 tracks volume + estimated 1RM per lift; v2 suggests
+  next load/reps**, enriched by nutrition/recovery (the connected-data edge).
+- **Exercise media = yes** (the landing promised animated diagrams/demos) — sourced
+  from a free exercise dataset (e.g. the open **wger** / Free Exercise DB) + our own;
+  same provider-abstraction + cache pattern as the food DB.
+- **Pre-built templated programs** (PPL, 5/3/1, Starting Strength, etc.) ship as
+  first-party content *and* seed the creator-program format.
+
+## Information & hierarchy
+1. **Hero (returning user):** "**Start today's session**" — the plan knows what's
+   scheduled; one tap into the live logger. The primary job is *train*, not *manage*.
+2. **Secondary:** this week's training pace vs. goal (feeds Gains Score), active plan, recent PRs.
+3. **Manage plans / browse programs / exercise library** = one level down.
 
 ## Connections
-- **Tracker** — sessions feed the habit heatmap, streak, and (future) volume/
-  strength progression charts.
-- **Dashboard** — "workouts this week" stat.
-- **Community** — workout count feeds leaderboard + competitions.
-- **Exercises** — the library feeds the plan builder.
-- **Nutrition/Recovery** — does training load adjust calorie/recovery guidance?
+- **Gains Score** — sessions + `session_sets` (reps/weight) + **goal frequency** feed
+  `pillar_training` (weeklyPace, sessionQuality, progressionTrend). See gains-score §4.2.
+- **Tracker** — sessions feed the habit heatmap, streak, and volume/e1RM progression charts.
+- **Dashboard** — "workouts this week" + next session surface here.
+- **Community / Creators** — workout activity feeds leaderboards/challenges; **creators
+  publish programs members adopt** (core monetization surface).
+- **Nutrition + Recovery** — training load informs calorie/recovery guidance and the
+  progression engine (the moat Fitbod can't match).
+- **Exercises** — the library (with media) feeds the builder.
 
 ## Flows
-- Create a plan → schedule days → add exercises.
-- Start a session → log sets live → finish → see it reflected in streak.
-- Browse an exercise → add to a plan.
+- Open Workouts → "Start today's session" → log sets live (rest timer, PRs) → finish → streak + Gains Score update.
+- Adopt a creator's published program → it becomes your scheduled plan.
+- Build/edit a personal plan → schedule days → add exercises from the library.
+- (Creator) author a program → publish to your community.
 
-## Open questions  **[YOU]**
-- [ ] Progressive overload intelligence — does the app suggest next weights/reps?
-- [ ] Exercise media — animated diagrams / video demos? (landing promises this)
-- [ ] Rest timers, supersets, RPE/RIR tracking — in scope?
-- [ ] Pre-built / templated programs (PPL, 5/3/1, etc.) vs. only custom?
-- [ ] Strength progression analytics (e1RM trends per lift) — how deep?
+## Open questions  *(resolved above; nothing blocking)*
+- Exercise media/content provider to confirm at Phase 1 build (free dataset + our own), same pattern as food DB.

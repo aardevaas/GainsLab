@@ -56,7 +56,7 @@ Each section spec has the same shape:
 | Strategic Foundation | 🟢 Vision + competitive landscape complete |
 | **Gains Score** | 🟢 Locked (decisions signed off; fairness math in §3.6) |
 | Nutrition | 🟢 Target locked (1 fork: food-DB provider trio to confirm) |
-| Workouts | 🟡 Today filled — awaiting Target |
+| Workouts | 🟢 Target locked |
 | Progress Tracker | 🟡 Today filled — awaiting Target |
 | Community | 🟡 Today filled — awaiting Target |
 | Education | 🟡 Today filled — awaiting Target |
