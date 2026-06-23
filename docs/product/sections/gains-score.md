@@ -60,7 +60,7 @@ the work) is controllable, daily, and predictive of results.
   - *progressionTrend*: volume or estimated-1RM trending up over trailing weeks (bonus, floored so beginners/deloads aren't punished).
 - **Recovery** *(enriched — see phasing)* = sleep duration vs. 7–9h target + sleep consistency + rest-day balance (+ HRV when a wearable is connected).
 - **Consistency** = streak strength × logging completeness across the day's relevant pillars. This is the habit engine; it ties directly to the activation metric.
-- **Progress** = `0.50 × cadence (logged body data this week?) + 0.50 × goalDirectionTrend` (weight/measurement trend moving the right way *for the goal*). Slow-moving; contributes to the rolling index, not daily volatility.
+- **Progress** = `0.40 × cadence (logged body data this week?) + 0.60 × fairTrend`, where `fairTrend` is the **starting-point-normalized** outcome score defined in §3.6 (this is the "fair to the skinny gainer *and* the obese loser" math). Slow-moving; contributes to the rolling index, not daily volatility.
 
 ### 3.3 Weighting — default + goal-adjusted (v1, tunable)
 
@@ -70,6 +70,65 @@ the work) is controllable, daily, and predictive of results.
 | Lose weight | 35 | 25 | 10 | 20 | 10 |
 | Gain muscle | 35 | 30 | 15 | 10 | 10 |
 | Improve endurance | 20 | 35 | 20 | 15 | 10 |
+
+### 3.6 Fairness mathematics — starting-point & difficulty normalization  ⭐
+
+> **Decision (locked):** the outcome/Progress component must be *incredibly fair*
+> across body types — a lean person fighting for slow muscle gain and an obese
+> person losing faster should both be able to score 100 when each executes
+> optimally **for their own body.** Absolute change (kg/week) is unfair; we
+> normalize for size, goal difficulty, and proximity to goal.
+
+**Step 1 — Bodyweight-relative rate (fair across body size).**
+Convert absolute change to **% of bodyweight per week** over a smoothed trailing
+window (≥14 days to filter water-weight noise):
+```
+r = (Δweight_kg / weight_kg) / weeks      // e.g. −0.83%/wk
+```
+A 120 kg person losing 1 kg/wk and a 60 kg person losing 0.5 kg/wk both = −0.83%/wk →
+**identical fairness input.** Size no longer advantages anyone.
+
+**Step 2 — Personalized optimal-rate target `r*` and tolerance `σ`.**
+The *healthy, muscle-sparing* optimal rate depends on goal **and** the user's body
+fat (more fat reserves → faster loss is safe & optimal; leaner → slower):
+
+| Goal | `r*` (%/wk) | `σ` (tolerance) | Difficulty note |
+|------|:---:|:---:|---|
+| Lose weight, higher body fat | −1.0 | 0.45 | More reserves → faster loss is safe; wide band |
+| Lose weight, lean | −0.5 | 0.30 | Must go slower to spare muscle; narrow band |
+| Gain muscle, novice | +0.50 | 0.35 | "Newbie gains" allow faster |
+| Gain muscle, trained | +0.25 | 0.20 | Muscle gain is intrinsically slow → small `r*`, tight band |
+| Maintain / recomp | 0.00 | 0.30 | Scored on body-comp trend, not the scale |
+
+`r*` and `σ` interpolate continuously from body-fat % and training age — no hard cliffs.
+
+**Step 3 — Gaussian scoring around the optimal (rewards *right*, not *more*).**
+```
+rateScore = 100 × exp( −(r − r*)² / (2σ²) )
+```
+Hitting `r*` = 100. **Too fast is penalized as much as too slow** — overshooting
+(crash-dieting → muscle loss; dirty-bulking → fat gain) is *not* rewarded. Because
+`r*`/`σ` are personalized, the lean gainer and the obese loser both peak at 100
+when each does what's optimal *for them*. This is the core fairness guarantee.
+
+**Step 4 — Body-composition override (fairer than the scale).**
+When body-fat %/measurements exist, compute the trend on **body composition**, not
+scale weight. This correctly rewards **recomposition** (weight flat, fat ↓, lean ↑ =
+excellent) and ignores water-weight lies. Signal priority: body-fat/measurement
+trend → scale-weight trend → cadence-only.
+
+**Step 5 — Proximity-to-goal blend (don't punish the near-finished).**
+As a user nears their goal, healthy change *should* slow. Blend in a **maintenance/
+adherence** score weighted by proximity, so someone at goal who holds steady scores
+high instead of being stuck at a low "no progress" number:
+```
+fairTrend = (1 − p) × rateScore + p × maintenanceScore
+p = proximity to goal (0 far → 1 at goal)
+```
+
+**Net effect:** the score is always measured against *your* optimal path, scaled to
+*your* body, with *your* difficulty — never an absolute leaderboard of biology.
+Two people executing perfectly score the same regardless of where they started.
 
 ### 3.4 Graceful degradation (critical for early users)
 
@@ -200,10 +259,20 @@ into real coaching.
 
 ---
 
-## 10. Open questions  **[YOU / to tune]**
+## 10. Decisions (locked)
 
-- [ ] Band thresholds & names — keep `Building/Consistent/Dialed-In/Elite` or rebrand?
-- [ ] Is the headline a **7-day EWMA** (recoverable, smooth) or a stricter all-time/30-day index? (Recommend 7-day EWMA for v1.)
-- [ ] Default weights per goal — sign off on the §3.3 table or adjust.
-- [ ] Is the score **public by default** (drives community/virality) or private with opt-in sharing?
-- [ ] Should creators be able to define **custom weightings** for their challenges (e.g., a "cut challenge" that weights Nutrition higher)? (Powerful, but adds complexity — v2+?)
+1. ✅ **Headline = 7-day EWMA** (smooth, recoverable).
+2. ✅ **Goal-weight table kept**, plus the **§3.6 fairness mathematics** — the
+   outcome score is normalized for body size, body-fat, goal difficulty, and
+   proximity to goal, so the lean gainer and the obese loser both peak at 100
+   when executing optimally for their own body.
+3. ✅ **Public by default**, with a per-user **private toggle** (and granular
+   share controls feed the Social Graph + privacy spec next).
+4. ✅ **Bands kept** — `Building / Consistent / Dialed-In / Elite` — doubling as
+   community tiers/badges; brandable later.
+5. ✅ **Creators can fully customize challenge weightings** (creators are core).
+   Per-challenge weight overrides are a first-class concept, not v2 — the
+   Community/Creator specs must support a challenge-scoped weighting profile.
+
+*All numbers (weights, `r*`, `σ`, band thresholds, EWMA half-life) remain
+runtime-tunable constants — locked structure, adjustable values.*

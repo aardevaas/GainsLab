@@ -54,7 +54,7 @@ Each section spec has the same shape:
 | Doc | State |
 |-----|-------|
 | Strategic Foundation | 🟢 Vision + competitive landscape complete |
-| **Gains Score** | 🟡 Specced — awaiting your sign-off on §10 open questions |
+| **Gains Score** | 🟢 Locked (decisions signed off; fairness math in §3.6) |
 | Nutrition | 🟡 Today filled — awaiting Target |
 | Workouts | 🟡 Today filled — awaiting Target |
 | Progress Tracker | 🟡 Today filled — awaiting Target |
