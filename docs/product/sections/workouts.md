@@ -43,9 +43,15 @@ Hevy/Fitbod/Strong structurally can't do:
   on the plan (sessions/week) and/or profile — snapshot like the nutrition target.
 - **Progression intelligence: v1 tracks volume + estimated 1RM per lift; v2 suggests
   next load/reps**, enriched by nutrition/recovery (the connected-data edge).
-- **Exercise media = yes** (the landing promised animated diagrams/demos) — sourced
-  from a free exercise dataset (e.g. the open **wger** / Free Exercise DB) + our own;
-  same provider-abstraction + cache pattern as the food DB.
+- **Exercise media = a real UX upgrade, not one static image.** Each exercise gets
+  **multiple images (start + end position) AND an animated GIF/clip showing the full
+  range of motion**, plus step instructions, target/synergist muscles, and
+  equipment. Today's single-image-with-text is explicitly insufficient.
+  - Free sourcing: **Free Exercise DB** (yuhonas — multi-image per exercise, open) +
+    **ExerciseDB** (RapidAPI — 1,300+ exercises *with ROM GIFs*, free tier) +
+    our own over time. Same provider-abstraction + local-cache pattern as the food DB.
+  - The exercise detail + the in-session view both show the ROM media so form is
+    clear while logging.
 - **Pre-built templated programs** (PPL, 5/3/1, Starting Strength, etc.) ship as
   first-party content *and* seed the creator-program format.
 

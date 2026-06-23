@@ -57,7 +57,7 @@ Each section spec has the same shape:
 | **Gains Score** | 🟢 Locked (decisions signed off; fairness math in §3.6) |
 | Nutrition | 🟢 Target locked (1 fork: food-DB provider trio to confirm) |
 | Workouts | 🟢 Target locked |
-| Progress Tracker | 🟡 Today filled — awaiting Target |
+| Progress Tracker | 🟢 Target locked |
 | Community | 🟡 Today filled — awaiting Target |
 | Education | 🟡 Today filled — awaiting Target |
 | Supplements | 🟡 Today filled — awaiting Target |

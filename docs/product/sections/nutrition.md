@@ -88,6 +88,21 @@ CalorieNinjas keys exist → kept as fallbacks only; **do not wire all six** (de
 
 **Architecture (so paid swaps are config, not rework):**
 1. `FoodProvider` interface (`search`, `getByBarcode`, `getById`) — one adapter per API.
-2. **Normalization layer** → canonical `FoodItem` (calories, protein/carbs/fat, serving) = the Gains Score contract shape.
+2. **Normalization layer** → canonical `FoodItem` capturing the **full nutrition
+   label** (all fields nullable — populated when the source provides them; USDA is
+   richest, OFF/FatSecret vary):
+   - **Serving** — size + unit *and* weight in grams (so we can scale by either)
+   - **Calories**
+   - **Total Fat** → Saturated fat, Trans fat
+   - **Cholesterol**
+   - **Sodium**
+   - **Total Carbs** → Dietary fiber, Total sugars *(+ added sugars when available)*
+   - **Protein**
+   - **Vitamins & micronutrients** — stored as a flexible key→amount map (USDA has
+     ~80; powers future micronutrient-gap insights + the Supplements link)
+
+   The Gains Score reads calories + protein + carbs + fat from this; the extra
+   fields give us **Cronometer-grade depth for free**, feeding a future
+   nutrition-quality signal and the supplement-gap recommender.
 3. **Search orchestration** — barcode: Open Food Facts → USDA; text: FatSecret + USDA merged & deduped, USDA badged **"verified."**
 4. **Local cache (`foods` table)** — cache every fetched item → beat free-tier rate limits *and* grow a proprietary food DB asset over time.
