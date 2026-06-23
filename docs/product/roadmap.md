@@ -38,7 +38,26 @@ marketplace + social graph + intelligence layer on top of the tracker we built).
    Corporate, insurance, gym deals, meal kits, etc. are post-traction.
 5. **LatAm-real from day one in architecture, not features.** Design i18n and
    payment abstraction early so we don't repaint later — but build the features
-   when the launch market needs them.
+   when the launch market needs them. Payment processor = **EBANX** (LatAm
+   coverage), not Stripe.
+6. **Design the schema for the whole vision; build the features incrementally.**
+   The one thing we must not get wrong is the **data model** — every consumer
+   (Gains Score, streaks, leaderboards, creator analytics, AI recs) reads from
+   it. We design it once to anticipate the full vision (identity, a unified
+   activity/event log, metrics, social graph, entitlements, creator/program),
+   build only the tables we need now, and shape them so later additions slot in
+   **without migrations that break things**. Anticipate in *data*, never in
+   *feature code* (that's where over-engineering lives).
+7. **Design money early, turn money on late.** The entitlement/tier *model*
+   (free vs. premium, plan state, gated content) is designed in Phase 0 so
+   feature-gating is declarative everywhere; the payment *flow* (EBANX, checkout,
+   creator payouts) is built near the end. Everything is simply "free" until we
+   flip it on.
+8. **Gains Score: design first, build last(ish).** It's a *consumer* of all
+   feature data, so it can't be implemented early — but speccing it first is the
+   forcing function that makes the data model correct. Design in Phase 0; ship a
+   thin v1 once core data flows; enrich as more data sources come online. Never
+   a big-bang rebuild.
 
 ---
 
@@ -64,15 +83,16 @@ marketplace + social graph + intelligence layer on top of the tracker we built).
 Each phase: **Goal · Scope · Depends on · Exit criteria · Model & effort.**
 
 ### Phase 0 — Product Definition & Architecture  ⏳ now
-**Goal:** Lock the complete blueprint so every later phase builds from a spec, not a guess.
-**Scope:**
-- Finish main section specs (Nutrition, Workouts, Tracker, Community, Education, Supplements) — Target + flows + open questions resolved.
-- Write the **new** specs the vision introduced: **Creators**, **Social Graph & Identity**, **Gains Score (Transformation Index)**, **Monetization & Tiers**.
-- Synthesize the **Dashboard** spec last.
-- Design the **data architecture** for new entities (social graph, pods, leagues, challenges, creators, programs, subscriptions, transactions, affiliate events) + RLS model.
+**Goal:** Lock the complete blueprint **and the canonical data architecture** so no later phase ever reworks fundamentals.
+**Build order within Phase 0 (this order matters):**
+1. **Spec the Gains Score *first*** — it's the most demanding consumer of data, so designing it dictates exactly what every feature must capture. (Design only; built incrementally much later.)
+2. **Finish the main section specs** (Nutrition, Workouts, Tracker, Community, Education, Supplements) + the **new** specs the vision introduced: **Creators**, **Social Graph & Identity**, **Monetization & Tiers (model only)**.
+3. **Design the canonical data architecture** anticipating the *whole* vision — identity, a **unified activity/event log** (the spine every consumer reads), metrics layer, social graph, **entitlements/tiers**, creator/program, and placeholders for subscriptions/transactions/affiliate events. Build only what's needed now; shape it so later tables slot in without breaking migrations. Includes the RLS model.
+4. **Synthesize the Dashboard spec last** (a lens onto the locked sections).
+5. **Define the MVP feature cut** (the first-creator-cohort slice).
 **Depends on:** strategy (✅).
-**Exit:** every spec marked 🟢 locked; a data-model doc the build can execute against.
-**Model & effort:** **Opus 4.8 · Extra** for the data architecture + Gains Score definition (deep, load-bearing reasoning); **Opus 4.8 · High** for the section specs.
+**Exit:** every spec 🟢 locked; a data-architecture doc + migration plan the build executes against; MVP cut agreed.
+**Model & effort:** **Opus 4.8 · Extra** for the Gains Score spec + data architecture (the load-bearing reasoning that prevents all future rework); **Opus 4.8 · High** for the section specs.
 
 ### Phase 1 — Core Excellence (the substrate)
 **Goal:** Make Nutrition, Workouts, and Tracker genuinely best-in-class — good enough that a creator is *proud* to bring their audience.
@@ -114,12 +134,19 @@ Each phase: **Goal · Scope · Depends on · Exit criteria · Model & effort.**
 **Exit:** a creator can publish a program/challenge and members can join it.
 **Model & effort:** **Opus 4.8 · High** (multi-sided architecture); **Sonnet 4.6 · High** for portal UI.
 
-### Phase 6 — Monetization Infrastructure
-**Goal:** Turn it on — subscriptions + creator payouts.
-**Scope:** freemium tiers + feature gating, Stripe subscriptions (keys already present), creator marketplace payouts + take rate, the supplement affiliate network, and the **LatAm payment-rail abstraction** (Mercado Pago / local processors). Launch only **Freemium + Creator Marketplace**.
-**Depends on:** Phase 5 (something to sell) + Phase 1 (premium features to gate).
-**Exit:** a member can subscribe; a creator can get paid; LatAm payment path proven.
-**Model & effort:** **Opus 4.8 · High** + **security-reviewer agent** (payments are high-stakes, fraud/PCI-adjacent — do not cut corners).
+### Phase 6 — Monetization *Activation*  (model lives in Phase 0; flow turns on here)
+> **Moved late, deliberately.** The entitlement/tier **model** is designed in
+> Phase 0 and features read it from day one (everything just reads as "free").
+> This phase only turns the **money flow** on — so it can slot in near the end
+> without blocking anything, and we can even beta-launch before it.
+**Goal:** Turn money on — subscriptions + creator payouts.
+**Scope:** flip on freemium gating (the checks already exist from P0+), **EBANX**
+integration (LatAm-first; not Stripe), checkout, creator marketplace payouts +
+take rate, supplement affiliate tracking. Launch only **Freemium + Creator
+Marketplace**; park the other 13 revenue streams.
+**Depends on:** Phase 5 (something to sell) + the entitlement model from Phase 0.
+**Exit:** a member can subscribe via EBANX; a creator can get paid; LatAm path proven.
+**Model & effort:** **Opus 4.8 · High** + **security-reviewer agent** (payments are high-stakes, fraud-adjacent — do not cut corners).
 
 ### Phase 7 — Virality & Content Engine
 **Goal:** Make the product grow itself.
