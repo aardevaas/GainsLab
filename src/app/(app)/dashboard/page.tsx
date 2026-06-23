@@ -25,7 +25,15 @@ import { formatNumber } from "@/lib/utils";
 import { sumMacros, type FoodLogEntry } from "@/lib/nutrition/types";
 import { CalorieRing } from "@/components/ui/CalorieRing";
 import { syncMyScores } from "@/app/(app)/community/actions";
+import { getGainsScore } from "@/lib/gains/engine";
 import type { Metadata } from "next";
+
+const BAND_LABEL: Record<string, string> = {
+  building: "Building",
+  consistent: "Consistent",
+  "dialed-in": "Dialed-In",
+  elite: "Elite",
+};
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -57,11 +65,12 @@ export default async function DashboardPage() {
 
   const todayIso = new Date().toISOString().split("T")[0];
 
-  const [profileRes, dietRes, scores, todayLogRes] = await Promise.all([
+  const [profileRes, dietRes, scores, todayLogRes, gains] = await Promise.all([
     supabase.from("profiles").select("*").eq("user_id", user.id).single(),
     supabase.from("dietary_profiles").select("*").eq("user_id", user.id).single(),
     syncMyScores(),
     supabase.from("food_logs").select("*").eq("user_id", user.id).eq("date", todayIso),
+    getGainsScore(user.id),
   ]);
 
   const profile = profileRes.data;
@@ -131,6 +140,75 @@ export default async function DashboardPage() {
       </div>
 
       <div className="flex-1 px-8 py-6 space-y-6">
+        {/* Gains Score hero */}
+        <div
+          className="rounded-2xl border p-6"
+          style={{ background: "var(--color-surface)", borderColor: "rgba(74,222,128,0.25)" }}
+        >
+          {gains.hasData ? (
+            <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+              <div className="flex items-end gap-4 shrink-0">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--color-text-muted)" }}>
+                    Gains Score
+                  </p>
+                  <div className="flex items-end gap-2">
+                    <span className="text-6xl font-black leading-none" style={{ color: "var(--color-accent)", letterSpacing: "-0.04em" }}>
+                      {Math.round(gains.score)}
+                    </span>
+                    <span
+                      className="mb-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide"
+                      style={{ background: "var(--color-accent-subtle)", color: "var(--color-accent)" }}
+                    >
+                      {BAND_LABEL[gains.band]}
+                    </span>
+                  </div>
+                  {gains.trend !== 0 && (
+                    <p className="text-xs mt-1" style={{ color: gains.trend > 0 ? "var(--color-accent)" : "var(--color-text-muted)" }}>
+                      {gains.trend > 0 ? "▲" : "▼"} {Math.abs(gains.trend)} this week
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Pillars */}
+              <div className="flex-1 grid grid-cols-2 sm:grid-cols-5 gap-2">
+                {gains.pillars.map((p) => (
+                  <div key={p.key} className="rounded-lg px-3 py-2" style={{ background: "var(--color-bg)" }}>
+                    <p className="text-[10px] uppercase tracking-wide" style={{ color: "var(--color-text-muted)" }}>{p.label}</p>
+                    <p className="text-sm font-bold" style={{ color: p.score == null ? "var(--color-text-muted)" : "var(--color-text)" }}>
+                      {p.score == null ? "—" : Math.round(p.score)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {gains.topLever && (
+                <div className="shrink-0 sm:max-w-52 rounded-lg px-4 py-3" style={{ background: "var(--color-accent-subtle)" }}>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--color-accent)" }}>
+                    Do this next
+                  </p>
+                  <p className="text-xs leading-snug" style={{ color: "var(--color-text)" }}>
+                    {gains.topLever.message}
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--color-text-muted)" }}>
+                  Gains Score
+                </p>
+                <p className="text-lg font-bold" style={{ color: "var(--color-text)" }}>Building your score</p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--color-text-muted)" }}>
+                  Log food, workouts, and progress for a few days to unlock it.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Onboarding banner */}
         {!isProfileComplete && (
           <div

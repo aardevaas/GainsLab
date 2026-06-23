@@ -12,7 +12,40 @@ import {
   type MacroPreset,
 } from '@/lib/calculators';
 
-type Pillar = 'nutrition' | 'training' | 'recovery' | 'consistency' | 'progress';
+export type Pillar = 'nutrition' | 'training' | 'recovery' | 'consistency' | 'progress';
+export type Band = 'building' | 'consistent' | 'dialed-in' | 'elite';
+
+export type GainsScoreView = {
+  hasData: boolean;
+  score: number; // 0–100 headline (EWMA)
+  daily: number;
+  trend: number; // Δ vs ~7 days ago
+  band: Band;
+  pillars: { key: Pillar; label: string; score: number | null }[];
+  topLever: { pillar: Pillar; label: string; message: string } | null;
+};
+
+const PILLAR_LABEL: Record<Pillar, string> = {
+  nutrition: 'Nutrition',
+  training: 'Training',
+  recovery: 'Recovery',
+  consistency: 'Consistency',
+  progress: 'Progress',
+};
+const LEVER_MESSAGE: Record<Pillar, string> = {
+  nutrition: 'Log your meals and hit your protein target today.',
+  training: 'Get a workout in — you’re below your weekly pace.',
+  recovery: 'Prioritise sleep and a rest day to recover.',
+  consistency: 'Keep your streak alive — log something today.',
+  progress: 'Log a weigh-in or progress photo this week.',
+};
+
+function bandFor(score: number): Band {
+  if (score >= 85) return 'elite';
+  if (score >= 65) return 'dialed-in';
+  if (score >= 40) return 'consistent';
+  return 'building';
+}
 
 // v1 default + goal-adjusted weights (gains-score §3.3). Recovery present but
 // dropped via graceful degradation until sleep data exists.
@@ -199,4 +232,48 @@ export async function recomputeDailyMetrics(userId: string, dateISO?: string): P
     },
     { onConflict: 'user_id,date' },
   );
+}
+
+/** Read the user's current Gains Score for display (dashboard, tracker). */
+export async function getGainsScore(userId: string): Promise<GainsScoreView> {
+  const supabase = await createClient();
+  const { data: rows } = await supabase
+    .from('daily_metrics')
+    .select('date, daily_score, gains_score, pillar_nutrition, pillar_training, pillar_recovery, pillar_consistency, pillar_progress')
+    .eq('user_id', userId)
+    .order('date', { ascending: false })
+    .limit(8);
+
+  const empty: GainsScoreView = {
+    hasData: false, score: 0, daily: 0, trend: 0, band: 'building',
+    pillars: (Object.keys(PILLAR_LABEL) as Pillar[]).map((k) => ({ key: k, label: PILLAR_LABEL[k], score: null })),
+    topLever: null,
+  };
+  if (!rows || rows.length === 0) return empty;
+
+  const latest = rows[0];
+  const weekAgo = rows[rows.length - 1];
+  const score = latest.gains_score ?? 0;
+
+  const pillars = (Object.keys(PILLAR_LABEL) as Pillar[]).map((k) => ({
+    key: k,
+    label: PILLAR_LABEL[k],
+    score: latest[`pillar_${k}` as const] as number | null,
+  }));
+
+  // topLever = the available pillar with the most room to improve (lowest score)
+  const available = pillars.filter((p) => p.score != null) as { key: Pillar; label: string; score: number }[];
+  const lever = available.length
+    ? available.reduce((lo, p) => (p.score < lo.score ? p : lo))
+    : null;
+
+  return {
+    hasData: true,
+    score,
+    daily: latest.daily_score ?? 0,
+    trend: rows.length > 1 ? round1(score - (weekAgo.gains_score ?? score)) : 0,
+    band: bandFor(score),
+    pillars,
+    topLever: lever ? { pillar: lever.key, label: lever.label, message: LEVER_MESSAGE[lever.key] } : null,
+  };
 }
