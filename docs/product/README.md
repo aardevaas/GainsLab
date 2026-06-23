@@ -64,7 +64,10 @@ Each section spec has the same shape:
 | Creators | 🟢 Locked (the wedge) |
 | Social Graph & Identity | 🟢 Locked (the social substrate) |
 | Monetization & Tiers (model) | 🟢 Locked (entitlement model; EBANX; money flow late) |
-| Canonical data architecture | ⚪ After specs |
-| Dashboard | ⚪ Deferred until sections are locked |
+| [Canonical data architecture](data-architecture.md) | 🟢 Locked (5 layers, snapshot/spine/graph/entitlement foundations, migration plan) |
+| Dashboard | 🟢 Locked (hero = Gains Score + topLever; synthesized from sections) |
 
 🟡 in progress · 🟢 locked · ⚪ not started
+
+> **Phase 0 is complete — every spec, the data architecture, and the dashboard are 🟢 locked.**
+> Next: Phase 1 (Core Excellence) builds against these. See [roadmap.md](roadmap.md).
