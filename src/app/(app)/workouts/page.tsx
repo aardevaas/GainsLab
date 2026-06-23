@@ -15,11 +15,12 @@ const DIFFICULTY_COLORS = {
 export default async function WorkoutsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
 
   const { data: plans } = await supabase
     .from('workout_plans')
     .select('*')
-    .eq('user_id', user!.id)
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
   return (
@@ -45,11 +46,12 @@ export default async function WorkoutsPage() {
         </Link>
       </div>
 
-      <div className="flex-1 px-8 py-6 max-w-3xl space-y-3">
+      <div className="flex-1 px-8 py-6">
         {!plans?.length ? (
           <EmptyState />
         ) : (
-          plans.map(plan => {
+          <div className="grid md:grid-cols-2 gap-3">
+          {plans.map(plan => {
             const colors = plan.difficulty
               ? DIFFICULTY_COLORS[plan.difficulty as keyof typeof DIFFICULTY_COLORS]
               : null;
@@ -127,7 +129,8 @@ export default async function WorkoutsPage() {
                 </div>
               </div>
             );
-          })
+          })}
+          </div>
         )}
       </div>
     </div>
@@ -137,7 +140,7 @@ export default async function WorkoutsPage() {
 function EmptyState() {
   return (
     <div
-      className="rounded-xl border p-12 flex flex-col items-center gap-4 text-center"
+      className="rounded-xl border p-12 flex flex-col items-center gap-4 text-center max-w-md mx-auto mt-8"
       style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
     >
       <div
