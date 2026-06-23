@@ -15,25 +15,36 @@ with cited, trustworthy guidance, and building authority/trust in the brand.
   cardio, spot-reduction myth, creatine, nutrient timing) — static data in
   `src/lib/learn/articles.ts`.
 
-## Target  **[YOU]**
-> _What should Education become? A static library, or a personalized learning
-> layer that ties guidance to the user's actual data and goals? Is this a
-> trust/SEO/acquisition play, a retention layer, or both?_
+## Target  *(synthesized — react/adjust)*
 
-## Information & hierarchy  **[YOU]**
-> _Should content be generic, or surfaced contextually (e.g., "you're cutting —
-> here's how to preserve muscle")? What earns the user's trust fastest?_
+Education is **both an acquisition channel and the trust spine** of the
+"science-backed" positioning — and crucially, **contextual, not a static library.**
+
+- **Contextual delivery is the edge.** Generic article libraries are everywhere and
+  ignored. GainsLab surfaces the *right* lesson tied to the user's data/goal:
+  "you're cutting and under protein 3 days running — here's why that costs muscle."
+  This is the Education ↔ Gains Score `topLever` ↔ AI-layer bridge.
+- **Dual role:** **public** evergreen articles = SEO/organic acquisition (free,
+  indexable, shareable by creators); **contextual in-app guidance** = retention.
+  Both, not either/or.
+- **Creators are content authors too** — creators can publish educational content to
+  their communities (ties to the creator economy; their voice = their trust).
+- **Format:** text + citations now (cheap, trustworthy, SEO-friendly); video/
+  interactive later. Trust is earned fastest by **visible citations + honesty**
+  (same principle as the Supplements evidence grades).
+
+## Information & hierarchy
+- **In-app:** contextual cards surfaced by goal + Gains Score weak pillar ("your
+  recovery score is low — read this"). Not a wall of articles.
+- **Public hub:** browsable/searchable evergreen library by category, SEO-structured.
 
 ## Connections
-- **All sections** — education could contextualize every feature ("why this
-  macro split", "why this rep range").
-- **Nutrition/Workouts** — recommend articles based on goal/activity.
-- **SEO/GTM** — public articles as an organic acquisition channel.
-- **Brand** — the science-backed positioning lives or dies here.
+- **Gains Score / AI** — the weak pillar (`topLever`) decides what to teach next.
+- **All sections** — contextualizes every feature ("why this macro split / rep range").
+- **Creators** — creators author + publish educational content to their audiences.
+- **SEO / GTM** — public articles = an organic acquisition channel (free).
+- **Supplements** — shares the evidence-grade trust model.
 
-## Open questions  **[YOU]**
-- [ ] Content depth/volume — how many articles, who writes them, how cited?
-- [ ] Personalized vs. evergreen library?
-- [ ] Public (SEO/acquisition) or gated (retention/Pro)?
-- [ ] Video / interactive content, or text + references?
-- [ ] Does education tie into coaching / programs?
+## Open questions  *(resolved; nothing blocking)*
+- Content volume/authorship cadence is an ops decision, not an architecture one —
+  the model supports first-party + creator-authored from day one.

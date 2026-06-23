@@ -12,24 +12,33 @@ Cut through supplement-industry noise — tell the user what actually works for
 - Static data in `src/lib/supplements/data.ts`.
 - Honest grading (e.g. BCAAs graded D as redundant when protein is adequate).
 
-## Target  **[YOU]**
-> _What should Supplements become? A static reference, a personalized stack
-> recommender tied to the user's goal/diet/gaps, or a commerce/affiliate
-> channel? Is this a trust feature, a monetization lever, or both?_
+## Target  *(synthesized — react/adjust)*
 
-## Information & hierarchy  **[YOU]**
-> _Should it recommend a personalized "stack" based on the user's goal and
-> nutrition gaps? What's the trust-building hero — the honesty (what NOT to
-> take) or the personalization?_
+Supplements is **both a trust feature and a monetization lever** — and the trust
+*is* what makes the monetization work.
+
+- **Trust hero = honesty (what NOT to take).** The evidence grades (A–D, BCAAs
+  graded D) are the differentiator — we tell people what to skip. That honesty is
+  what makes a recommendation believable enough to buy through.
+- **Personalized stack recommender**, not just a catalog: keyed to the user's
+  **goal + diet + actual nutrition gaps** (from the full-label micronutrient data
+  we now capture). "Your logged intake is low on magnesium and you're cutting —
+  here's the evidence-graded option."
+- **Monetization (strategy revenue stream 3):** affiliate in mature markets;
+  **local store partnerships / promo codes** in LatAm; **creators get their own
+  codes/partnerships** (a creator perk they'll love). Behind the abstraction so
+  the link/commerce layer is swappable per region.
+
+## Information & hierarchy
+- **Hero:** the personalized stack for *your* goal + gaps, each item evidence-graded.
+- **Secondary:** searchable catalog by goal/evidence; "skip these" honesty section.
 
 ## Connections
-- **Nutrition** — could flag micronutrient gaps → suggest supplementation.
-- **Profile/Goals** — recommendations keyed to goal (cut/bulk/endurance).
-- **Monetization** — affiliate links / partnerships / Pro-gated stack builder?
-- **Education** — shares the science-backed trust positioning.
+- **Nutrition** — the micronutrient map flags real intake gaps → targeted suggestions.
+- **Gains Score / Profile** — recommendations keyed to goal + the user's data.
+- **Education** — shares the evidence-grade trust model.
+- **Monetization** — affiliate / local partnerships / creator codes (region-abstracted).
 
-## Open questions  **[YOU]**
-- [ ] Personalized stack builder vs. static catalog?
-- [ ] Monetization: affiliate, marketplace, or purely a trust/value feature?
-- [ ] Tie to nutrition data (recommend based on actual intake gaps)?
-- [ ] How many supplements, and who maintains the evidence base?
+## Open questions  *(resolved; nothing blocking)*
+- Affiliate/partnership providers per region are a Monetization-phase ops decision;
+  the data/recommender model is set.

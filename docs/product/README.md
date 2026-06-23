@@ -58,9 +58,9 @@ Each section spec has the same shape:
 | Nutrition | 🟢 Target locked (1 fork: food-DB provider trio to confirm) |
 | Workouts | 🟢 Target locked |
 | Progress Tracker | 🟢 Target locked |
-| Community | 🟡 Today filled — awaiting Target |
-| Education | 🟡 Today filled — awaiting Target |
-| Supplements | 🟡 Today filled — awaiting Target |
+| Community | 🟢 Target locked (member-side; creator-side → Creators spec) |
+| Education | 🟢 Target locked |
+| Supplements | 🟢 Target locked |
 | Creators / Social Graph / Monetization model | ⚪ Not started |
 | Canonical data architecture | ⚪ After specs |
 | Dashboard | ⚪ Deferred until sections are locked |
