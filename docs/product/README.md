@@ -61,7 +61,9 @@ Each section spec has the same shape:
 | Community | 🟢 Target locked (member-side; creator-side → Creators spec) |
 | Education | 🟢 Target locked |
 | Supplements | 🟢 Target locked |
-| Creators / Social Graph / Monetization model | ⚪ Not started |
+| Creators | 🟢 Locked (the wedge) |
+| Social Graph & Identity | 🟢 Locked (the social substrate) |
+| Monetization & Tiers (model) | queued |
 | Canonical data architecture | ⚪ After specs |
 | Dashboard | ⚪ Deferred until sections are locked |
 
