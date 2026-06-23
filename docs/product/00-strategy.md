@@ -46,7 +46,12 @@ athlete.
 
 ---
 
-## 4. Competitive Landscape  **[CLAUDE — to expand via competitive-teardown]**
+## 4. Competitive Landscape  **[CLAUDE — ✅ full teardown complete]**
+
+> **→ See the full [Competitive Teardown](competitive-teardown.md)** for the
+> deep analysis of MyFitnessPal, Cronometer, Hevy, Fitbod, and Strava —
+> verified pricing, strengths, the credible gap in each, attack vectors, and
+> the pricing map. Summary below.
 
 Where the sharks win, and — more importantly — where they leave the door open.
 

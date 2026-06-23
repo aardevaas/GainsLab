@@ -31,6 +31,7 @@ Each section spec has the same shape:
 ## The order we define things
 
 1. **[Strategic Foundation](00-strategy.md)** — the frame everything ladders up to.
+   - **[Competitive Teardown](competitive-teardown.md)** — the 5 sharks, where they're beatable *(done)*.
 2. **Main sections** (fine-grained, one at a time):
    - [Nutrition](sections/nutrition.md)
    - [Workouts](sections/workouts.md)
@@ -44,7 +45,7 @@ Each section spec has the same shape:
 
 | Doc | State |
 |-----|-------|
-| Strategic Foundation | 🟡 Scaffolded — awaiting your vision |
+| Strategic Foundation | 🟡 Competitive landscape done; vision sections awaiting you |
 | Nutrition | 🟡 Today filled — awaiting Target |
 | Workouts | 🟡 Today filled — awaiting Target |
 | Progress Tracker | 🟡 Today filled — awaiting Target |
