@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { recomputeDailyMetrics } from '@/lib/gains/engine';
 
 export type MeasurementInput = {
   date: string;
@@ -28,8 +29,10 @@ export async function logMeasurement(input: MeasurementInput): Promise<void> {
     { user_id: user.id, ...input },
     { onConflict: 'user_id,date' }
   );
+  await recomputeDailyMetrics(user.id, input.date).catch(() => {});
   revalidatePath('/tracker');
   revalidatePath('/tracker/body');
+  revalidatePath('/dashboard');
 }
 
 export async function deleteMeasurement(id: string): Promise<void> {

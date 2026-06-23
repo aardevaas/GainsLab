@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { updateWorkoutCompetitions } from '@/app/(app)/community/competitions/actions';
+import { recomputeDailyMetrics } from '@/lib/gains/engine';
 
 type SetLog = {
   exerciseName: string;
@@ -58,6 +59,7 @@ export async function completeSession(
 
   // Update scores for any workout-type competitions the user has joined
   await updateWorkoutCompetitions(user.id);
+  await recomputeDailyMetrics(user.id).catch(() => {});
 
   revalidatePath('/tracker/habits');
   revalidatePath('/community/leaderboard');

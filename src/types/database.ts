@@ -399,7 +399,7 @@ export type Database = {
           goal_snapshot: string | null;
           computed_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['daily_metrics']['Row'], 'id' | 'computed_at'> & { id?: string; computed_at?: string };
+        Insert: { user_id: string; date: string } & Partial<Omit<Database['public']['Tables']['daily_metrics']['Row'], 'user_id' | 'date'>>;
         Update: Partial<Database['public']['Tables']['daily_metrics']['Insert']>;
         Relationships: [];
       };
