@@ -24,10 +24,11 @@ export type Database = {
           activity_level: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active' | 'extra_active' | null;
           units: 'metric' | 'imperial';
           onboarding_completed: boolean;
+          timezone: string;
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'id' | 'created_at' | 'updated_at'> & { id?: string };
+        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'id' | 'created_at' | 'updated_at' | 'timezone'> & { id?: string; timezone?: string };
         Update: Partial<Database['public']['Tables']['profiles']['Insert']>;
         Relationships: [];
       };
@@ -89,9 +90,24 @@ export type Database = {
           fiber_g: number | null;
           sugar_g: number | null;
           sodium_mg: number | null;
+          saturated_fat_g: number | null;
+          trans_fat_g: number | null;
+          cholesterol_mg: number | null;
+          added_sugar_g: number | null;
+          micronutrients: Record<string, number> | null;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['food_logs']['Row'], 'id' | 'created_at'> & { id?: string };
+        Insert: Omit<
+          Database['public']['Tables']['food_logs']['Row'],
+          'id' | 'created_at' | 'saturated_fat_g' | 'trans_fat_g' | 'cholesterol_mg' | 'added_sugar_g' | 'micronutrients'
+        > & {
+          id?: string;
+          saturated_fat_g?: number | null;
+          trans_fat_g?: number | null;
+          cholesterol_mg?: number | null;
+          added_sugar_g?: number | null;
+          micronutrients?: Record<string, number> | null;
+        };
         Update: Partial<Database['public']['Tables']['food_logs']['Insert']>;
         Relationships: [];
       };
@@ -332,6 +348,108 @@ export type Database = {
         };
         Insert: Omit<Database['public']['Tables']['subscriptions']['Row'], 'id' | 'created_at' | 'updated_at'> & { id?: string };
         Update: Partial<Database['public']['Tables']['subscriptions']['Insert']>;
+        Relationships: [];
+      };
+      daily_targets: {
+        Row: {
+          id: string;
+          user_id: string;
+          date: string;
+          calorie_target: number | null;
+          protein_target: number | null;
+          carb_target: number | null;
+          fat_target: number | null;
+          training_freq_target: number | null;
+          goal: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['daily_targets']['Row'], 'id' | 'created_at'> & { id?: string };
+        Update: Partial<Database['public']['Tables']['daily_targets']['Insert']>;
+        Relationships: [];
+      };
+      daily_metrics: {
+        Row: {
+          id: string;
+          user_id: string;
+          date: string;
+          calories_in: number | null;
+          protein_g: number | null;
+          carbs_g: number | null;
+          fat_g: number | null;
+          calorie_target: number | null;
+          protein_target: number | null;
+          trained: boolean;
+          session_count_week: number | null;
+          training_volume: number | null;
+          est_1rm_snapshot: number | null;
+          sleep_minutes: number | null;
+          sleep_quality: number | null;
+          logged_food: boolean;
+          logged_workout: boolean;
+          logged_progress: boolean;
+          weight_kg: number | null;
+          body_fat_pct: number | null;
+          pillar_nutrition: number | null;
+          pillar_training: number | null;
+          pillar_recovery: number | null;
+          pillar_consistency: number | null;
+          pillar_progress: number | null;
+          daily_score: number | null;
+          gains_score: number | null;
+          goal_snapshot: string | null;
+          computed_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['daily_metrics']['Row'], 'id' | 'computed_at'> & { id?: string; computed_at?: string };
+        Update: Partial<Database['public']['Tables']['daily_metrics']['Insert']>;
+        Relationships: [];
+      };
+      foods: {
+        Row: {
+          id: string;
+          source: string;
+          source_id: string | null;
+          barcode: string | null;
+          name: string;
+          brand: string | null;
+          serving_qty: number | null;
+          serving_unit: string | null;
+          serving_grams: number | null;
+          calories: number | null;
+          protein_g: number | null;
+          carbs_g: number | null;
+          fat_g: number | null;
+          saturated_fat_g: number | null;
+          trans_fat_g: number | null;
+          cholesterol_mg: number | null;
+          sodium_mg: number | null;
+          fiber_g: number | null;
+          sugar_g: number | null;
+          added_sugar_g: number | null;
+          micronutrients: Record<string, number> | null;
+          verified: boolean;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['foods']['Row'], 'id' | 'created_at'> & { id?: string };
+        Update: Partial<Database['public']['Tables']['foods']['Insert']>;
+        Relationships: [];
+      };
+      exercises: {
+        Row: {
+          id: string;
+          source: string;
+          source_id: string | null;
+          name: string;
+          category: string | null;
+          equipment: string | null;
+          primary_muscles: string[] | null;
+          secondary_muscles: string[] | null;
+          instructions: string[] | null;
+          images: string[] | null;
+          gif_url: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['exercises']['Row'], 'id' | 'created_at'> & { id?: string };
+        Update: Partial<Database['public']['Tables']['exercises']['Insert']>;
         Relationships: [];
       };
     };

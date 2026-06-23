@@ -1,17 +1,29 @@
-export type FoodSource = 'usda' | 'off';
+export type FoodSource = 'usda' | 'off' | 'fatsecret' | 'custom';
 
+// Canonical food shape. All nutrient values are **per 100g** (the cache invariant;
+// per-serving sources convert on the way in). Extra label fields are optional —
+// populated when the source provides them (USDA is richest).
 export type FoodItem = {
-  id: string;
+  id: string;                 // `${source}_${sourceId}`
   name: string;
   brand?: string;
   source: FoodSource;
+  verified?: boolean;         // USDA → true (drives the "verified" badge)
+  barcode?: string;
   per100g: {
     calories: number;
     proteinG: number;
     carbsG: number;
     fatG: number;
     fiberG: number;
+    saturatedFatG?: number;
+    transFatG?: number;
+    cholesterolMg?: number;
+    sodiumMg?: number;
+    sugarG?: number;
+    addedSugarG?: number;
   };
+  micronutrients?: Record<string, number>;
   servingSize?: number;
   servingUnit?: string;
 };
