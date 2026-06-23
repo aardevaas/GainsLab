@@ -37,26 +37,32 @@ Each section spec has the same shape:
 
 1. **[Strategic Foundation](00-strategy.md)** — the frame everything ladders up to.
    - **[Competitive Teardown](competitive-teardown.md)** — the 5 sharks, where they're beatable *(done)*.
-2. **Main sections** (fine-grained, one at a time):
+2. **[Gains Score](sections/gains-score.md)** — specced *first* as the data-model forcing function.
+3. **Main sections** (fine-grained, one at a time):
    - [Nutrition](sections/nutrition.md)
    - [Workouts](sections/workouts.md)
    - [Progress Tracker](sections/tracker.md)
    - [Community](sections/community.md)
    - [Education](sections/education.md)
    - [Supplements](sections/supplements.md)
-3. **[Dashboard](sections/dashboard.md)** — synthesized *last*, from the locked sections.
+4. **New specs the vision introduced:** Creators · Social Graph & Identity · Monetization & Tiers (model).
+5. **Canonical data architecture** — from the locked specs above.
+6. **[Dashboard](sections/dashboard.md)** — synthesized *last*, from the locked sections.
 
 ## Status
 
 | Doc | State |
 |-----|-------|
 | Strategic Foundation | 🟢 Vision + competitive landscape complete |
+| **Gains Score** | 🟡 Specced — awaiting your sign-off on §10 open questions |
 | Nutrition | 🟡 Today filled — awaiting Target |
 | Workouts | 🟡 Today filled — awaiting Target |
 | Progress Tracker | 🟡 Today filled — awaiting Target |
 | Community | 🟡 Today filled — awaiting Target |
 | Education | 🟡 Today filled — awaiting Target |
 | Supplements | 🟡 Today filled — awaiting Target |
+| Creators / Social Graph / Monetization model | ⚪ Not started |
+| Canonical data architecture | ⚪ After specs |
 | Dashboard | ⚪ Deferred until sections are locked |
 
 🟡 in progress · 🟢 locked · ⚪ not started
