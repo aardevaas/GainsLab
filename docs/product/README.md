@@ -63,7 +63,7 @@ Each section spec has the same shape:
 | Supplements | 🟢 Target locked |
 | Creators | 🟢 Locked (the wedge) |
 | Social Graph & Identity | 🟢 Locked (the social substrate) |
-| Monetization & Tiers (model) | queued |
+| Monetization & Tiers (model) | 🟢 Locked (entitlement model; EBANX; money flow late) |
 | Canonical data architecture | ⚪ After specs |
 | Dashboard | ⚪ Deferred until sections are locked |
 
