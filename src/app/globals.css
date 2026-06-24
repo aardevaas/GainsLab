@@ -138,6 +138,27 @@ img, video { max-width: 100%; display: block; }
   }
 }
 
+/* ── Exercise range-of-motion auto-scrub ──
+   Crossfades the end frame over the held start frame to mimic the motion.
+   Plays ONLY on hover/focus of its card (`.rom-media`) — never globally in
+   sync — or when explicitly auto-playing on a detail page (`.rom-autoplay`).
+   Pure CSS (compositor-friendly opacity only, no JS timers); the global
+   reduced-motion block below neutralizes it, leaving the start frame. */
+@keyframes rom-scrub {
+  0%, 30% { opacity: 0; }
+  50%, 80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.rom-scrub-end {
+  opacity: 0;
+}
+.rom-media:hover .rom-scrub-end,
+.rom-media:focus-visible .rom-scrub-end,
+.rom-media:focus-within .rom-scrub-end,
+.rom-autoplay .rom-scrub-end {
+  animation: rom-scrub 2.4s ease-in-out infinite;
+}
+
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

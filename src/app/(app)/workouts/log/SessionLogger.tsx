@@ -3,6 +3,8 @@
 import { useState, useEffect, useTransition } from 'react';
 import { Plus, Minus, CheckCircle, Loader2, Timer } from 'lucide-react';
 import { completeSession } from './actions';
+import { ExerciseMedia } from '@/components/exercises/ExerciseMedia';
+import { exerciseImageUrls } from '@/lib/exercises/types';
 
 type Exercise = {
   id: string;
@@ -144,9 +146,16 @@ export function SessionLogger({ planId, days }: Props) {
           style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
         >
           <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: 'var(--color-border-subtle)' }}>
-            <div>
-              <p className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>{ex.exercise_name}</p>
-              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Target: {ex.sets} sets{ex.reps ? ` × ${ex.reps} reps` : ''}</p>
+            <div className="flex items-center gap-3">
+              <ExerciseMedia
+                images={exerciseImageUrls(ex.exercise_id)}
+                alt={ex.exercise_name}
+                className="size-14 rounded-lg shrink-0"
+              />
+              <div>
+                <p className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>{ex.exercise_name}</p>
+                <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Target: {ex.sets} sets{ex.reps ? ` × ${ex.reps} reps` : ''}</p>
+              </div>
             </div>
             <button
               onClick={() => addSet(ex.id, ex.exercise_name, ex.exercise_id)}
