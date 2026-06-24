@@ -76,10 +76,14 @@ export function FoodLogClient({ date, entries: initial, goals }: Props) {
   }
 
   function handleSelect(food: FoodItem) {
+    // `servingSize` is the size of ONE serving (e.g. 30g) — not a count. Default
+    // to 1 serving when known (calcFoodMacros multiplies by the gram size), else
+    // 100g. Previously quantity defaulted to the serving SIZE with unit
+    // "serving" (e.g. "30 servings" → 900g → ~4,200 kcal).
     setAddState(s => s && {
       ...s,
       selected: food,
-      quantity: food.servingSize ?? 100,
+      quantity: food.servingSize ? 1 : 100,
       unit: food.servingSize ? 'serving' : 'g',
       results: [],
       query: food.name,
