@@ -1,8 +1,10 @@
 'use server';
 
+import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import type { Recipe, RecipeIngredient } from '@/lib/recipes/types';
+import type { SpoonRecipeDetail } from '@/lib/recipes/spoonacular';
 import type { Json } from '@/types/database';
 
 export async function saveRecipe(recipe: Recipe): Promise<void> {
@@ -101,4 +103,33 @@ export async function addRecipeIngredientsToGrocery(ingredients: RecipeIngredien
   );
 
   revalidatePath('/grocery');
+}
+
+export async function logSpoonRecipe(recipe: SpoonRecipeDetail): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const today = new Date().toISOString().split('T')[0];
+
+  await supabase.from('food_logs').insert({
+    user_id: user.id,
+    date: today,
+    meal_type: 'lunch',
+    food_id: null,
+    food_name: recipe.title,
+    brand: 'Spoonacular',
+    calories: recipe.calories,
+    protein_g: recipe.protein,
+    carbs_g: recipe.carbs,
+    fat_g: recipe.fat,
+    fiber_g: null,
+    sugar_g: null,
+    sodium_mg: null,
+    unit: 'serving',
+    quantity: 1,
+  });
+
+  revalidatePath('/nutrition/log');
+  redirect('/nutrition/log');
 }
