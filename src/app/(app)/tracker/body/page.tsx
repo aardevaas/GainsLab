@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { BodyMeasurementsClient } from './BodyMeasurementsClient';
+import { BodyCompositionTimeline } from './BodyCompositionTimeline';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = { title: 'Body Measurements' };
@@ -61,8 +62,9 @@ export default async function BodyMeasurementsPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-8 py-6">
+      <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8 max-w-4xl">
         <BodyMeasurementsClient measurements={(data ?? []) as Measurement[]} />
+        <BodyCompositionTimeline measurements={(data ?? []) as Measurement[]} />
       </div>
     </div>
   );
