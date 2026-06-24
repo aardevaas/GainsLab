@@ -26,10 +26,11 @@ export type Database = {
           onboarding_completed: boolean;
           timezone: string;
           is_admin: boolean;
+          is_creator: boolean;
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'id' | 'created_at' | 'updated_at' | 'timezone' | 'is_admin'> & { id?: string; timezone?: string; is_admin?: boolean };
+        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'id' | 'created_at' | 'updated_at' | 'timezone' | 'is_admin' | 'is_creator'> & { id?: string; timezone?: string; is_admin?: boolean; is_creator?: boolean };
         Update: Partial<Database['public']['Tables']['profiles']['Insert']>;
         Relationships: [];
       };
@@ -496,6 +497,326 @@ export type Database = {
         };
         Insert: Omit<Database['public']['Tables']['exercises']['Row'], 'id' | 'created_at'> & { id?: string };
         Update: Partial<Database['public']['Tables']['exercises']['Insert']>;
+        Relationships: [];
+      };
+      creator_applications: {
+        Row: {
+          id: string;
+          user_id: string;
+          full_name: string;
+          bio: string | null;
+          specialty: string[];
+          instagram_url: string | null;
+          youtube_url: string | null;
+          tiktok_url: string | null;
+          experience_years: number | null;
+          certifications: string | null;
+          motivation: string;
+          status: 'pending' | 'approved' | 'rejected';
+          reviewed_by: string | null;
+          review_note: string | null;
+          reviewed_at: string | null;
+          submitted_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['creator_applications']['Row'], 'id' | 'submitted_at' | 'status' | 'reviewed_by' | 'review_note' | 'reviewed_at'> & {
+          id?: string;
+          status?: 'pending' | 'approved' | 'rejected';
+          reviewed_by?: string | null;
+          review_note?: string | null;
+          reviewed_at?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['creator_applications']['Insert']>;
+        Relationships: [];
+      };
+      creator_profiles: {
+        Row: {
+          id: string;
+          user_id: string;
+          display_name: string;
+          slug: string;
+          bio: string | null;
+          avatar_url: string | null;
+          cover_url: string | null;
+          specialty: string[];
+          country: string | null;
+          city: string | null;
+          languages: string[];
+          instagram_url: string | null;
+          youtube_url: string | null;
+          tiktok_url: string | null;
+          website_url: string | null;
+          certifications: string | null;
+          experience_years: number | null;
+          community_price_bob: number | null;
+          platform_cut_pct: number;
+          total_clients: number;
+          total_transformations: number;
+          avg_client_rating: number | null;
+          is_verified: boolean;
+          is_featured: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['creator_profiles']['Row'], 'id' | 'created_at' | 'updated_at' | 'total_clients' | 'total_transformations' | 'platform_cut_pct' | 'is_verified' | 'is_featured'> & {
+          id?: string;
+          platform_cut_pct?: number;
+          total_clients?: number;
+          total_transformations?: number;
+          is_verified?: boolean;
+          is_featured?: boolean;
+        };
+        Update: Partial<Database['public']['Tables']['creator_profiles']['Insert']>;
+        Relationships: [];
+      };
+      programs: {
+        Row: {
+          id: string;
+          creator_id: string;
+          title: string;
+          description: string | null;
+          type: 'standard' | 'one_on_one' | 'challenge';
+          goal: 'fat_loss' | 'muscle_gain' | 'maintenance' | 'performance' | 'general' | null;
+          duration_weeks: number;
+          price_bob: number;
+          cover_image_url: string | null;
+          is_published: boolean;
+          is_free: boolean;
+          enrollment_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['programs']['Row'], 'id' | 'created_at' | 'updated_at' | 'enrollment_count' | 'is_published' | 'is_free'> & {
+          id?: string;
+          is_published?: boolean;
+          is_free?: boolean;
+          enrollment_count?: number;
+        };
+        Update: Partial<Database['public']['Tables']['programs']['Insert']>;
+        Relationships: [];
+      };
+      program_weeks: {
+        Row: {
+          id: string;
+          program_id: string;
+          week_number: number;
+          title: string | null;
+          description: string | null;
+        };
+        Insert: Omit<Database['public']['Tables']['program_weeks']['Row'], 'id'> & { id?: string };
+        Update: Partial<Database['public']['Tables']['program_weeks']['Insert']>;
+        Relationships: [];
+      };
+      program_days: {
+        Row: {
+          id: string;
+          week_id: string;
+          day_number: number;
+          title: string | null;
+          rest_day: boolean;
+        };
+        Insert: Omit<Database['public']['Tables']['program_days']['Row'], 'id'> & { id?: string; rest_day?: boolean };
+        Update: Partial<Database['public']['Tables']['program_days']['Insert']>;
+        Relationships: [];
+      };
+      program_exercises: {
+        Row: {
+          id: string;
+          day_id: string;
+          exercise_id: string | null;
+          exercise_name: string;
+          sets: number | null;
+          reps: string | null;
+          weight_guidance: string | null;
+          rest_seconds: number | null;
+          notes: string | null;
+          order_index: number;
+        };
+        Insert: Omit<Database['public']['Tables']['program_exercises']['Row'], 'id'> & { id?: string; order_index?: number };
+        Update: Partial<Database['public']['Tables']['program_exercises']['Insert']>;
+        Relationships: [];
+      };
+      program_nutrition: {
+        Row: {
+          id: string;
+          day_id: string;
+          calorie_target: number | null;
+          protein_g: number | null;
+          carbs_g: number | null;
+          fat_g: number | null;
+          meal_timing_notes: string | null;
+          recommended_recipe_ids: string[];
+        };
+        Insert: Omit<Database['public']['Tables']['program_nutrition']['Row'], 'id'> & { id?: string; recommended_recipe_ids?: string[] };
+        Update: Partial<Database['public']['Tables']['program_nutrition']['Insert']>;
+        Relationships: [];
+      };
+      program_habits: {
+        Row: {
+          id: string;
+          program_id: string;
+          title: string;
+          description: string | null;
+          frequency: 'daily' | 'weekly';
+          order_index: number;
+        };
+        Insert: Omit<Database['public']['Tables']['program_habits']['Row'], 'id'> & { id?: string; frequency?: 'daily' | 'weekly'; order_index?: number };
+        Update: Partial<Database['public']['Tables']['program_habits']['Insert']>;
+        Relationships: [];
+      };
+      client_roster: {
+        Row: {
+          id: string;
+          creator_id: string;
+          member_user_id: string;
+          program_id: string | null;
+          status: 'active' | 'paused' | 'completed' | 'cancelled';
+          current_week: number;
+          start_date: string;
+          end_date: string | null;
+          payment_amount_bob: number | null;
+          payment_submission_id: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['client_roster']['Row'], 'id' | 'created_at' | 'updated_at' | 'current_week' | 'status'> & {
+          id?: string;
+          status?: 'active' | 'paused' | 'completed' | 'cancelled';
+          current_week?: number;
+        };
+        Update: Partial<Database['public']['Tables']['client_roster']['Insert']>;
+        Relationships: [];
+      };
+      creator_communities: {
+        Row: {
+          id: string;
+          creator_id: string;
+          name: string;
+          description: string | null;
+          is_public: boolean;
+          member_count: number;
+          post_count: number;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['creator_communities']['Row'], 'id' | 'created_at' | 'member_count' | 'post_count' | 'is_public'> & {
+          id?: string;
+          is_public?: boolean;
+          member_count?: number;
+          post_count?: number;
+        };
+        Update: Partial<Database['public']['Tables']['creator_communities']['Insert']>;
+        Relationships: [];
+      };
+      community_posts: {
+        Row: {
+          id: string;
+          community_id: string;
+          author_user_id: string;
+          content: string | null;
+          image_urls: string[];
+          video_url: string | null;
+          post_type: 'text' | 'image' | 'video' | 'workout_share' | 'progress_share';
+          is_pinned: boolean;
+          like_count: number;
+          comment_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['community_posts']['Row'], 'id' | 'created_at' | 'updated_at' | 'like_count' | 'comment_count' | 'is_pinned'> & {
+          id?: string;
+          is_pinned?: boolean;
+          like_count?: number;
+          comment_count?: number;
+          image_urls?: string[];
+        };
+        Update: Partial<Database['public']['Tables']['community_posts']['Insert']>;
+        Relationships: [];
+      };
+      community_post_likes: {
+        Row: {
+          post_id: string;
+          user_id: string;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['community_post_likes']['Row'], 'created_at'>;
+        Update: Partial<Database['public']['Tables']['community_post_likes']['Insert']>;
+        Relationships: [];
+      };
+      community_post_comments: {
+        Row: {
+          id: string;
+          post_id: string;
+          author_user_id: string;
+          content: string;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['community_post_comments']['Row'], 'id' | 'created_at'> & { id?: string };
+        Update: Partial<Database['public']['Tables']['community_post_comments']['Insert']>;
+        Relationships: [];
+      };
+      recipe_packs: {
+        Row: {
+          id: string;
+          creator_id: string;
+          title: string;
+          description: string | null;
+          cover_image_url: string | null;
+          price_bob: number;
+          recipe_count: number;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['recipe_packs']['Row'], 'id' | 'created_at' | 'recipe_count'> & { id?: string; recipe_count?: number };
+        Update: Partial<Database['public']['Tables']['recipe_packs']['Insert']>;
+        Relationships: [];
+      };
+      creator_recipes: {
+        Row: {
+          id: string;
+          creator_id: string;
+          pack_id: string | null;
+          title: string;
+          description: string | null;
+          ingredients: Json;
+          instructions: string[];
+          macros: Json | null;
+          image_url: string | null;
+          prep_time_minutes: number | null;
+          cook_time_minutes: number | null;
+          servings: number | null;
+          tags: string[];
+          access_level: 'free' | 'community' | 'pack';
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['creator_recipes']['Row'], 'id' | 'created_at'> & { id?: string; access_level?: 'free' | 'community' | 'pack'; tags?: string[]; instructions?: string[] };
+        Update: Partial<Database['public']['Tables']['creator_recipes']['Insert']>;
+        Relationships: [];
+      };
+      automated_checkins: {
+        Row: {
+          id: string;
+          creator_id: string;
+          program_id: string | null;
+          title: string;
+          questions: Json;
+          frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly';
+          send_day_of_week: number | null;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['automated_checkins']['Row'], 'id' | 'created_at' | 'is_active'> & { id?: string; is_active?: boolean; questions?: Json };
+        Update: Partial<Database['public']['Tables']['automated_checkins']['Insert']>;
+        Relationships: [];
+      };
+      checkin_responses: {
+        Row: {
+          id: string;
+          checkin_id: string;
+          member_user_id: string;
+          responses: Json;
+          submitted_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['checkin_responses']['Row'], 'id' | 'submitted_at'> & { id?: string };
+        Update: Partial<Database['public']['Tables']['checkin_responses']['Insert']>;
         Relationships: [];
       };
     };
