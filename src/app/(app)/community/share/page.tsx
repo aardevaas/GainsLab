@@ -3,11 +3,13 @@ import { ArrowLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { syncMyScores } from '../actions';
 import { ShareCardClient } from './ShareCardClient';
+import { requirePro } from '@/lib/payments/gate';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = { title: 'Share Progress' };
 
 export default async function SharePage() {
+  await requirePro();
   const supabase = await createClient();
 
   const [{ data: { user } }, scores] = await Promise.all([

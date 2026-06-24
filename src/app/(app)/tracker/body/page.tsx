@@ -3,6 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { BodyMeasurementsClient } from './BodyMeasurementsClient';
 import { BodyCompositionTimeline } from './BodyCompositionTimeline';
+import { requirePro } from '@/lib/payments/gate';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = { title: 'Body Measurements' };
@@ -31,6 +32,7 @@ export type Measurement = {
 };
 
 export default async function BodyMeasurementsPage() {
+  await requirePro();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;

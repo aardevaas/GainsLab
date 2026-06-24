@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowLeft, Trophy, Medal } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { syncMyScores } from '../actions';
+import { requirePro } from '@/lib/payments/gate';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = { title: 'Leaderboard' };
@@ -18,6 +19,7 @@ const CATEGORIES = {
 type CategoryKey = keyof typeof CATEGORIES;
 
 export default async function LeaderboardPage({ searchParams }: { searchParams: SearchParams }) {
+  await requirePro();
   const { category: rawCat = 'gains_score' } = await searchParams;
   const catKey: CategoryKey = rawCat in CATEGORIES ? (rawCat as CategoryKey) : 'workouts';
   const cat = CATEGORIES[catKey];

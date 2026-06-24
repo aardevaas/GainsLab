@@ -15,11 +15,21 @@ export default async function AppLayout({
 
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("user_id", user.id)
-    .single();
+  const [profileRes, subRes] = await Promise.all([
+    supabase.from("profiles").select("*").eq("user_id", user.id).single(),
+    supabase
+      .from("subscriptions")
+      .select("status, expires_at")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+  ]);
+
+  const profile = profileRes.data;
+  const sub = subRes.data;
+  const isPro =
+    sub?.status === "active" &&
+    !!sub.expires_at &&
+    new Date(sub.expires_at) > new Date();
 
   return (
     <div className="flex min-h-dvh" style={{ background: "var(--color-bg)" }}>
@@ -28,6 +38,7 @@ export default async function AppLayout({
         profileName={profile?.name ?? null}
         avatarUrl={profile?.avatar_url ?? null}
         onboardingComplete={profile?.onboarding_completed ?? false}
+        isPro={isPro}
       />
       <div className="flex-1 flex flex-col pt-14 lg:pt-0 lg:ml-[var(--sidebar-width)]">
         <PageTransition>{children}</PageTransition>

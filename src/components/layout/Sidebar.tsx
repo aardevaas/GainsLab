@@ -19,6 +19,7 @@ import {
   LogOut,
   Menu,
   X,
+  Star,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -74,12 +75,14 @@ type SidebarProps = {
   profileName: string | null;
   avatarUrl: string | null;
   onboardingComplete: boolean;
+  isPro: boolean;
 };
 
 export function Sidebar({
   userEmail,
   profileName,
   avatarUrl,
+  isPro,
 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -234,6 +237,28 @@ export function Sidebar({
         className="shrink-0 border-t px-3 py-3 space-y-0.5"
         style={{ borderColor: "var(--color-border-subtle)" }}
       >
+        {/* Upgrade CTA — only for free users */}
+        {!isPro && (
+          <Link
+            href="/subscribe"
+            className="flex items-center gap-2.5 px-3 py-2.5 mb-2 rounded-xl border transition-all"
+            style={{
+              background: "var(--color-accent-subtle)",
+              borderColor: "var(--color-accent)",
+            }}
+          >
+            <Star size={13} style={{ color: "var(--color-accent)", flexShrink: 0 }} />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold" style={{ color: "var(--color-accent)" }}>
+                Upgrade to Pro
+              </p>
+              <p className="text-[10px]" style={{ color: "var(--color-text-muted)" }}>
+                Bs. {process.env.NEXT_PUBLIC_PLAN_PRICE_BOB ?? "99.60"} / month
+              </p>
+            </div>
+          </Link>
+        )}
+
         <Link
           href="/profile"
           className={cn(
@@ -282,12 +307,22 @@ export function Sidebar({
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p
-              className="text-xs font-semibold truncate"
-              style={{ color: "var(--color-text)" }}
-            >
-              {displayName}
-            </p>
+            <div className="flex items-center gap-1.5">
+              <p
+                className="text-xs font-semibold truncate"
+                style={{ color: "var(--color-text)" }}
+              >
+                {displayName}
+              </p>
+              {isPro && (
+                <span
+                  className="shrink-0 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                  style={{ background: "var(--color-accent)", color: "#0a0c0f" }}
+                >
+                  Pro
+                </span>
+              )}
+            </div>
             <p
               className="text-[10px] truncate"
               style={{ color: "var(--color-text-muted)" }}

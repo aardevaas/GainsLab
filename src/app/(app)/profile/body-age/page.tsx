@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowLeft, Activity, TrendingDown, TrendingUp, Minus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { BodyAgeTestClient } from './BodyAgeTestClient';
+import { requirePro } from '@/lib/payments/gate';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = { title: 'Body Age Score' };
@@ -29,6 +30,7 @@ function AgeDelta({ bodyAge, chronoAge }: { bodyAge: number; chronoAge: number }
 }
 
 export default async function BodyAgePage() {
+  await requirePro();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 

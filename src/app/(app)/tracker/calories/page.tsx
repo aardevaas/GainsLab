@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { calculateTDEE } from '@/lib/calculators';
 import type { ActivityLevel } from '@/lib/calculators';
 import { CalorieDashboardClient } from './CalorieDashboardClient';
+import { requirePro } from '@/lib/payments/gate';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = { title: 'Calorie Dashboard' };
@@ -48,6 +49,7 @@ export type CalorieDashboardData = {
 };
 
 export default async function CalorieDashboardPage() {
+  await requirePro();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
