@@ -100,11 +100,11 @@ export default async function ProgramsPage() {
           {list.map(p => {
             const color = TYPE_COLOR[p.type] ?? '#60a5fa';
             return (
-              <div key={p.id} style={{
+              <Link key={p.id} href={`/studio/programs/${p.id}`} style={{
                 background: 'var(--color-surface)',
                 border: '1px solid var(--color-border-subtle)',
                 borderRadius: 14, overflow: 'hidden',
-                display: 'flex', flexDirection: 'column',
+                display: 'flex', flexDirection: 'column', textDecoration: 'none',
               }}>
                 {/* Color stripe */}
                 <div style={{ height: 4, background: color, opacity: 0.7 }} />
@@ -164,7 +164,7 @@ export default async function ProgramsPage() {
                     {new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>
