@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Trophy, Users, Share2, Zap, Flame, Dumbbell } from 'lucide-react';
+import { Trophy, Users, Share2, Zap, Flame, Dumbbell, Star } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { syncMyScores } from './actions';
 import type { Metadata } from 'next';
@@ -44,9 +44,10 @@ export default async function CommunityPage() {
 
       <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8">
         {/* Stat strip */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: 'Current streak', value: scores.streak, unit: scores.streak === 1 ? 'day' : 'days', icon: Flame, color: 'var(--color-accent)' },
+            { label: 'Gains Score', value: scores.gainsScore, unit: 'pts', icon: Star, color: 'var(--color-accent)' },
+            { label: 'Current streak', value: scores.streak, unit: scores.streak === 1 ? 'day' : 'days', icon: Flame, color: '#fb923c' },
             { label: 'Workouts this week', value: scores.workoutsWeekly, unit: scores.workoutsWeekly === 1 ? 'session' : 'sessions', icon: Dumbbell, color: '#a78bfa' },
             { label: 'Nutrition days', value: scores.nutritionWeekly, unit: 'of 7 this week', icon: Zap, color: '#60a5fa' },
           ].map(card => {

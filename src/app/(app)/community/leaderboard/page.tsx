@@ -9,6 +9,7 @@ export const metadata: Metadata = { title: 'Leaderboard' };
 type SearchParams = Promise<{ category?: string }>;
 
 const CATEGORIES = {
+  gains_score: { db: 'gains_score', period: 'all_time' as const, label: 'Gains Score', unit: 'pts', description: 'Overall fitness score — nutrition, training, consistency & more' },
   workouts: { db: 'workouts_weekly', period: 'weekly' as const, label: 'Workouts', unit: 'sessions', description: 'Workout sessions completed this week' },
   nutrition: { db: 'nutrition_weekly', period: 'weekly' as const, label: 'Nutrition', unit: 'days', description: 'Days with food logged this week' },
   streak: { db: 'streak', period: 'all_time' as const, label: 'Streak', unit: 'days', description: 'Consecutive active days' },
@@ -17,7 +18,7 @@ const CATEGORIES = {
 type CategoryKey = keyof typeof CATEGORIES;
 
 export default async function LeaderboardPage({ searchParams }: { searchParams: SearchParams }) {
-  const { category: rawCat = 'workouts' } = await searchParams;
+  const { category: rawCat = 'gains_score' } = await searchParams;
   const catKey: CategoryKey = rawCat in CATEGORIES ? (rawCat as CategoryKey) : 'workouts';
   const cat = CATEGORIES[catKey];
 

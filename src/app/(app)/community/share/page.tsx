@@ -34,8 +34,10 @@ export default async function SharePage() {
     ? Math.round(entries.reduce((s, r) => s + (r.calories ?? 0), 0) / entries.length)
     : 0;
 
-  const imageUrl = buildCardUrl({ name: displayName, streak: scores.streak, workouts: scores.workoutsWeekly, calories: avgCalories });
-  const shareText = `🔥 ${scores.streak}-day streak | 💪 ${scores.workoutsWeekly} workouts this week | Tracking with GainsLab`;
+  const imageUrl = buildCardUrl({ name: displayName, streak: scores.streak, workouts: scores.workoutsWeekly, calories: avgCalories, gainsScore: scores.gainsScore });
+  const shareText = scores.gainsScore > 0
+    ? `⭐ ${scores.gainsScore} Gains Score | 🔥 ${scores.streak}-day streak | 💪 ${scores.workoutsWeekly} workouts this week | Tracking with GainsLab`
+    : `🔥 ${scores.streak}-day streak | 💪 ${scores.workoutsWeekly} workouts this week | Tracking with GainsLab`;
 
   return (
     <div className="flex flex-col min-h-full">
@@ -70,12 +72,13 @@ function weekBounds(): { start: string; end: string } {
   };
 }
 
-function buildCardUrl(params: { name: string; streak: number; workouts: number; calories: number }): string {
+function buildCardUrl(params: { name: string; streak: number; workouts: number; calories: number; gainsScore: number }): string {
   const qs = new URLSearchParams({
     name: params.name,
     streak: String(params.streak),
     workouts: String(params.workouts),
     calories: String(params.calories),
+    gains_score: String(params.gainsScore),
   });
   return `/api/share-card?${qs.toString()}`;
 }

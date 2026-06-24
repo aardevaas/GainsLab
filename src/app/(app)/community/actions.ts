@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { getGainsScore } from '@/lib/gains/engine';
 
 function weekBounds(): { start: string; end: string } {
   const d = new Date();
@@ -26,19 +27,21 @@ export type MyScores = {
   streak: number;
   workoutsWeekly: number;
   nutritionWeekly: number;
+  gainsScore: number;
 };
 
 export async function syncMyScores(): Promise<MyScores> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { streak: 0, workoutsWeekly: 0, nutritionWeekly: 0 };
+  if (!user) return { streak: 0, workoutsWeekly: 0, nutritionWeekly: 0, gainsScore: 0 };
 
   const { start, end } = weekBounds();
   const ago90 = nDaysAgo(90);
 
-  const [foodRes, workoutsRes] = await Promise.all([
+  const [foodRes, workoutsRes, gains] = await Promise.all([
     supabase.from('food_logs').select('date').eq('user_id', user.id).gte('date', ago90),
     supabase.from('workout_sessions').select('date').eq('user_id', user.id).gte('date', ago90),
+    getGainsScore(user.id),
   ]);
 
   const foodDays = new Set(foodRes.data?.map(r => r.date) ?? []);
@@ -59,6 +62,8 @@ export async function syncMyScores(): Promise<MyScores> {
     }
   }
 
+  const gainsScore = gains.hasData ? gains.score : 0;
+
   await Promise.all([
     supabase.from('leaderboard_scores').upsert(
       { user_id: user.id, category: 'workouts_weekly', period: 'weekly' as const, score: workoutsWeekly },
@@ -72,6 +77,10 @@ export async function syncMyScores(): Promise<MyScores> {
       { user_id: user.id, category: 'streak', period: 'all_time' as const, score: streak },
       { onConflict: 'user_id,category,period' }
     ),
+    supabase.from('leaderboard_scores').upsert(
+      { user_id: user.id, category: 'gains_score', period: 'all_time' as const, score: gainsScore },
+      { onConflict: 'user_id,category,period' }
+    ),
   ]);
 
   // Note: no revalidatePath here — this runs during page render (dashboard,
@@ -79,5 +88,5 @@ export async function syncMyScores(): Promise<MyScores> {
   // unnecessary (these pages are dynamic and read fresh data). Mutations that
   // change scores (e.g. workout logging) revalidate /community/leaderboard
   // from their own server actions.
-  return { streak, workoutsWeekly, nutritionWeekly };
+  return { streak, workoutsWeekly, nutritionWeekly, gainsScore };
 }
