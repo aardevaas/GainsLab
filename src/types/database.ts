@@ -186,8 +186,14 @@ export type Database = {
           weight_kg: number | null;
           duration_seconds: number | null;
           notes: string | null;
+          rpe: number | null;
+          is_warmup: boolean;
         };
-        Insert: Omit<Database['public']['Tables']['session_sets']['Row'], 'id'> & { id?: string };
+        Insert: Omit<Database['public']['Tables']['session_sets']['Row'], 'id' | 'rpe' | 'is_warmup'> & {
+          id?: string;
+          rpe?: number | null;
+          is_warmup?: boolean;
+        };
         Update: Partial<Database['public']['Tables']['session_sets']['Insert']>;
         Relationships: [];
       };

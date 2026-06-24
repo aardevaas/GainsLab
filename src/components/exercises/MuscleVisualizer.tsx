@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Body, { type ExtendedBodyPart } from '@mjcdev/react-body-highlighter';
 import { toSlugs, preferredSide } from '@/lib/exercises/muscle-map';
 
@@ -40,6 +40,12 @@ export function MuscleVisualizer({ primaryMuscles, secondaryMuscles }: Props) {
   const [gender, setGender] = useState<Gender>('male');
   const [side, setSide] = useState<Side>(() => preferredSide(primary));
 
+  // The body-highlighter resolves neutral fills from a browser API, so its SSR
+  // output differs from the client — render it only after mount to avoid a
+  // hydration mismatch (placeholder holds the space, no layout shift).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const data: ExtendedBodyPart[] =
     mode === 'highlight'
       ? [...primary, ...secondary].map((slug) => ({ slug, intensity: 1 }))
@@ -73,16 +79,20 @@ export function MuscleVisualizer({ primaryMuscles, secondaryMuscles }: Props) {
       {/* Body model */}
       <div
         className="flex items-center justify-center rounded-xl border py-6"
-        style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
+        style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', minHeight: 500 }}
       >
-        <Body
-          data={data}
-          gender={gender}
-          side={side}
-          scale={1.25}
-          colors={PALETTE[mode]}
-          border="var(--color-border-subtle)"
-        />
+        {mounted ? (
+          <Body
+            data={data}
+            gender={gender}
+            side={side}
+            scale={1.25}
+            colors={PALETTE[mode]}
+            border="var(--color-border-subtle)"
+          />
+        ) : (
+          <div className="animate-pulse rounded-xl" style={{ width: 250, height: 460, background: 'var(--color-surface-elevated)' }} />
+        )}
       </div>
 
       {/* Gender + side toggles */}
