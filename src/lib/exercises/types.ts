@@ -31,9 +31,16 @@ export type Exercise = {
   images: string[];
 };
 
-/** Base for the Free Exercise DB raw assets (images + dataset). */
+/**
+ * Base for the Free Exercise DB assets (images + dataset). Served via the
+ * jsDelivr `gh` CDN rather than raw.githubusercontent.com — a real global CDN,
+ * purpose-built for GitHub content, with no rate limiting (raw throttles and is
+ * not a sanctioned CDN). Drop-in: the `/exercises/...` and `/dist/...` paths are
+ * identical. (A future Supabase Storage mirror can replace this when we host
+ * our own ROM GIFs.)
+ */
 export const EXERCISE_DB_BASE =
-  'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main';
+  'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main';
 
 /**
  * Deterministic start/end range-of-motion frame URLs for a Free Exercise DB
