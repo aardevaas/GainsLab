@@ -25,10 +25,11 @@ export type Database = {
           units: 'metric' | 'imperial';
           onboarding_completed: boolean;
           timezone: string;
+          is_admin: boolean;
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'id' | 'created_at' | 'updated_at' | 'timezone'> & { id?: string; timezone?: string };
+        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'id' | 'created_at' | 'updated_at' | 'timezone' | 'is_admin'> & { id?: string; timezone?: string; is_admin?: boolean };
         Update: Partial<Database['public']['Tables']['profiles']['Insert']>;
         Relationships: [];
       };
@@ -344,16 +345,55 @@ export type Database = {
         Row: {
           id: string;
           user_id: string;
-          plan: 'free' | 'pro' | 'elite';
-          status: 'active' | 'cancelled' | 'past_due' | 'trialing';
-          stripe_customer_id: string | null;
-          stripe_subscription_id: string | null;
-          period_end: string | null;
+          plan_id: string;
+          status: 'active' | 'inactive' | 'expired';
+          started_at: string | null;
+          expires_at: string | null;
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['subscriptions']['Row'], 'id' | 'created_at' | 'updated_at'> & { id?: string };
+        Insert: Omit<Database['public']['Tables']['subscriptions']['Row'], 'id' | 'created_at'> & { id?: string; updated_at?: string };
         Update: Partial<Database['public']['Tables']['subscriptions']['Insert']>;
+        Relationships: [];
+      };
+      payment_submissions: {
+        Row: {
+          id: string;
+          user_id: string;
+          receipt_storage_path: string;
+          plan_id: string;
+          status: 'pending' | 'approved' | 'rejected' | 'flagged';
+          amount_extracted: number | null;
+          transaction_id_extracted: string | null;
+          date_extracted: string | null;
+          destination_extracted: string | null;
+          ocr_raw: Json | null;
+          ocr_confidence: string | null;
+          auto_approved: boolean;
+          reviewed_by: string | null;
+          review_note: string | null;
+          submitted_at: string;
+          reviewed_at: string | null;
+        };
+        Insert: Omit<Database['public']['Tables']['payment_submissions']['Row'], 'id' | 'submitted_at' | 'auto_approved' | 'reviewed_by' | 'review_note' | 'reviewed_at'> & {
+          id?: string;
+          auto_approved?: boolean;
+          reviewed_by?: string | null;
+          review_note?: string | null;
+          reviewed_at?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['payment_submissions']['Insert']>;
+        Relationships: [];
+      };
+      verified_tx_ids: {
+        Row: {
+          transaction_id: string;
+          submission_id: string;
+          user_id: string;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['verified_tx_ids']['Row'], 'created_at'>;
+        Update: Partial<Database['public']['Tables']['verified_tx_ids']['Insert']>;
         Relationships: [];
       };
       daily_targets: {
