@@ -11,6 +11,8 @@ import {
   ArrowRight,
   AlertCircle,
   Flame,
+  HeartPulse,
+  TrendingDown,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -65,17 +67,25 @@ export default async function DashboardPage() {
 
   const todayIso = new Date().toISOString().split("T")[0];
 
-  const [profileRes, dietRes, scores, todayLogRes, gains] = await Promise.all([
+  const [profileRes, dietRes, scores, todayLogRes, gains, bodyAgeRes] = await Promise.all([
     supabase.from("profiles").select("*").eq("user_id", user.id).single(),
     supabase.from("dietary_profiles").select("*").eq("user_id", user.id).single(),
     syncMyScores(),
     supabase.from("food_logs").select("*").eq("user_id", user.id).eq("date", todayIso),
     getGainsScore(user.id),
+    supabase
+      .from("body_age_assessments")
+      .select("body_age_score, chronological_age, date")
+      .eq("user_id", user.id)
+      .order("date", { ascending: false })
+      .limit(1)
+      .single(),
   ]);
 
   const profile = profileRes.data;
   const todayTotals = sumMacros((todayLogRes.data ?? []) as FoodLogEntry[]);
   const macroPreset = (dietRes.data?.macro_preset ?? "balanced") as MacroPreset;
+  const bodyAge = bodyAgeRes.data ?? null;
 
   const firstName = profile?.name?.split(" ")[0] ?? "there";
   const hour = new Date().getHours();
@@ -146,6 +156,7 @@ export default async function DashboardPage() {
           style={{ background: "var(--color-surface)", borderColor: "rgba(74,222,128,0.25)" }}
         >
           {gains.hasData ? (
+            <>
             <div className="flex flex-col sm:flex-row sm:items-center gap-6">
               <div className="flex items-end gap-4 shrink-0">
                 <div>
@@ -194,7 +205,41 @@ export default async function DashboardPage() {
                 </div>
               )}
             </div>
+
+            {/* Body Age chip */}
+            <div className="mt-4 pt-4 border-t flex items-center justify-between" style={{ borderColor: "var(--color-border)" }}>
+              <div className="flex items-center gap-2.5">
+                <HeartPulse size={14} style={{ color: bodyAge ? "#a78bfa" : "var(--color-text-muted)" }} />
+                <span className="text-xs font-semibold" style={{ color: "var(--color-text-muted)" }}>Body Age</span>
+                {bodyAge ? (
+                  <>
+                    <span className="text-sm font-black tabular-nums" style={{ color: "#a78bfa", letterSpacing: "-0.02em" }}>
+                      {bodyAge.body_age_score} yrs
+                    </span>
+                    {bodyAge.chronological_age && bodyAge.body_age_score && (() => {
+                      const delta = bodyAge.body_age_score - bodyAge.chronological_age;
+                      return (
+                        <span className="flex items-center gap-0.5 text-xs font-semibold" style={{ color: delta < -2 ? "#4ade80" : delta > 2 ? "#f87171" : "var(--color-text-secondary)" }}>
+                          {delta < -2 ? <><TrendingDown size={12} />{Math.abs(delta)}y younger</> : delta > 2 ? <><TrendingUp size={12} />{delta}y older</> : "At chronological age"}
+                        </span>
+                      );
+                    })()}
+                  </>
+                ) : (
+                  <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>Not assessed yet</span>
+                )}
+              </div>
+              <Link
+                href="/profile/body-age"
+                className="text-xs font-semibold flex items-center gap-1"
+                style={{ color: "var(--color-accent)" }}
+              >
+                {bodyAge ? "Retest" : "Take test"} <ArrowRight size={11} />
+              </Link>
+            </div>
+            </>
           ) : (
+            <>
             <div className="flex items-center gap-4">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--color-text-muted)" }}>
@@ -206,6 +251,35 @@ export default async function DashboardPage() {
                 </p>
               </div>
             </div>
+
+            {/* Body Age chip — always visible */}
+            <div className="mt-4 pt-4 border-t flex items-center justify-between" style={{ borderColor: "var(--color-border)" }}>
+              <div className="flex items-center gap-2.5">
+                <HeartPulse size={14} style={{ color: bodyAge ? "#a78bfa" : "var(--color-text-muted)" }} />
+                <span className="text-xs font-semibold" style={{ color: "var(--color-text-muted)" }}>Body Age</span>
+                {bodyAge ? (
+                  <>
+                    <span className="text-sm font-black tabular-nums" style={{ color: "#a78bfa", letterSpacing: "-0.02em" }}>
+                      {bodyAge.body_age_score} yrs
+                    </span>
+                    {bodyAge.chronological_age && bodyAge.body_age_score && (() => {
+                      const delta = bodyAge.body_age_score - bodyAge.chronological_age;
+                      return (
+                        <span className="flex items-center gap-0.5 text-xs font-semibold" style={{ color: delta < -2 ? "#4ade80" : delta > 2 ? "#f87171" : "var(--color-text-secondary)" }}>
+                          {delta < -2 ? <><TrendingDown size={12} />{Math.abs(delta)}y younger</> : delta > 2 ? <><TrendingUp size={12} />{delta}y older</> : "At chronological age"}
+                        </span>
+                      );
+                    })()}
+                  </>
+                ) : (
+                  <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>Not assessed yet</span>
+                )}
+              </div>
+              <Link href="/profile/body-age" className="text-xs font-semibold flex items-center gap-1" style={{ color: "var(--color-accent)" }}>
+                {bodyAge ? "Retest" : "Take test"} <ArrowRight size={11} />
+              </Link>
+            </div>
+            </>
           )}
         </div>
 
