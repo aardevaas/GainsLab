@@ -20,6 +20,7 @@ import {
   Menu,
   X,
   Star,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -76,6 +77,7 @@ type SidebarProps = {
   avatarUrl: string | null;
   onboardingComplete: boolean;
   isPro: boolean;
+  isCreator?: boolean;
 };
 
 export function Sidebar({
@@ -83,6 +85,7 @@ export function Sidebar({
   profileName,
   avatarUrl,
   isPro,
+  isCreator = false,
 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -237,6 +240,50 @@ export function Sidebar({
         className="shrink-0 border-t px-3 py-3 space-y-0.5"
         style={{ borderColor: "var(--color-border-subtle)" }}
       >
+        {/* Creator Studio CTA — for approved creators */}
+        {isCreator && (
+          <Link
+            href="/studio"
+            className="flex items-center gap-2.5 px-3 py-2.5 mb-1 rounded-xl border transition-all"
+            style={{
+              background: 'rgba(96,165,250,0.08)',
+              borderColor: 'rgba(96,165,250,0.35)',
+            }}
+          >
+            <Sparkles size={13} style={{ color: '#60a5fa', flexShrink: 0 }} />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold" style={{ color: '#60a5fa' }}>
+                Creator Studio
+              </p>
+              <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                Manage programs &amp; clients
+              </p>
+            </div>
+          </Link>
+        )}
+
+        {/* Become a Creator CTA — for non-creators */}
+        {!isCreator && (
+          <Link
+            href="/apply"
+            className="flex items-center gap-2.5 px-3 py-2.5 mb-1 rounded-xl border transition-all"
+            style={{
+              background: 'rgba(74,222,128,0.04)',
+              borderColor: 'rgba(74,222,128,0.18)',
+            }}
+          >
+            <Sparkles size={13} style={{ color: 'var(--color-accent)', flexShrink: 0 }} />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold" style={{ color: 'var(--color-accent)' }}>
+                Become a Creator
+              </p>
+              <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                Sell programs · Keep 90–95%
+              </p>
+            </div>
+          </Link>
+        )}
+
         {/* Upgrade CTA — only for free users */}
         {!isPro && (
           <Link

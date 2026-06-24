@@ -15,11 +15,16 @@ export default async function AppLayout({
 
   if (!user) redirect("/login");
 
-  const [profileRes, subRes] = await Promise.all([
+  const [profileRes, subRes, creatorRes] = await Promise.all([
     supabase.from("profiles").select("*").eq("user_id", user.id).single(),
     supabase
       .from("subscriptions")
       .select("status, expires_at")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("creator_profiles")
+      .select("id")
       .eq("user_id", user.id)
       .maybeSingle(),
   ]);
@@ -30,6 +35,7 @@ export default async function AppLayout({
     sub?.status === "active" &&
     !!sub.expires_at &&
     new Date(sub.expires_at) > new Date();
+  const isCreator = !!creatorRes.data;
 
   return (
     <div className="flex min-h-dvh" style={{ background: "var(--color-bg)" }}>
@@ -39,6 +45,7 @@ export default async function AppLayout({
         avatarUrl={profile?.avatar_url ?? null}
         onboardingComplete={profile?.onboarding_completed ?? false}
         isPro={isPro}
+        isCreator={isCreator}
       />
       <div className="flex-1 flex flex-col pt-14 lg:pt-0 lg:ml-[var(--sidebar-width)]">
         <PageTransition>{children}</PageTransition>
