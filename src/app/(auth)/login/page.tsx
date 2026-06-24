@@ -25,6 +25,28 @@ export default function LoginPage() {
   const supabase = createClient();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [guestLoading, setGuestLoading] = useState(false);
+
+  async function enterAsGuest() {
+    setServerError(null);
+    setGuestLoading(true);
+    const { error } = await supabase.auth.signInAnonymously();
+    setGuestLoading(false);
+
+    if (error) {
+      const looksDisabled =
+        /anonymous|disabled|not enabled/i.test(error.message);
+      setServerError(
+        looksDisabled
+          ? "Guest access isn't enabled yet. Turn on Anonymous sign-ins in Supabase → Authentication → Providers."
+          : error.message,
+      );
+      return;
+    }
+
+    router.push("/dashboard");
+    router.refresh();
+  }
 
   const {
     register,
@@ -103,6 +125,25 @@ export default function LoginPage() {
           Sign in
         </Button>
       </form>
+
+      <div className="flex items-center gap-3 my-5">
+        <div className="h-px flex-1" style={{ background: "var(--color-border)" }} />
+        <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>or</span>
+        <div className="h-px flex-1" style={{ background: "var(--color-border)" }} />
+      </div>
+
+      <Button
+        type="button"
+        variant="secondary"
+        onClick={enterAsGuest}
+        isLoading={guestLoading}
+        className="w-full"
+      >
+        Enter as guest
+      </Button>
+      <p className="text-xs text-center mt-2" style={{ color: "var(--color-text-muted)" }}>
+        Explore the full app with a temporary account — no signup needed.
+      </p>
 
       <p className="text-sm text-center text-[var(--color-text-muted)] mt-6">
         Don&apos;t have an account?{" "}

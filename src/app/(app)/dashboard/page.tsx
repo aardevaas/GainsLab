@@ -11,6 +11,8 @@ import {
   ArrowRight,
   AlertCircle,
   Flame,
+  HeartPulse,
+  TrendingDown,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -22,7 +24,18 @@ import {
   type MacroGoals,
 } from "@/lib/calculators";
 import { formatNumber } from "@/lib/utils";
+import { sumMacros, type FoodLogEntry } from "@/lib/nutrition/types";
+import { CalorieRing } from "@/components/ui/CalorieRing";
+import { syncMyScores } from "@/app/(app)/community/actions";
+import { getGainsScore } from "@/lib/gains/engine";
 import type { Metadata } from "next";
+
+const BAND_LABEL: Record<string, string> = {
+  building: "Building",
+  consistent: "Consistent",
+  "dialed-in": "Dialed-In",
+  elite: "Elite",
+};
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -48,13 +61,31 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [profileRes, dietRes] = await Promise.all([
-    supabase.from("profiles").select("*").eq("user_id", user!.id).single(),
-    supabase.from("dietary_profiles").select("*").eq("user_id", user!.id).single(),
+  // The (app) layout redirects unauthenticated users; guard here so the page
+  // never throws if it renders before that redirect resolves (e.g. mid-login).
+  if (!user) return null;
+
+  const todayIso = new Date().toISOString().split("T")[0];
+
+  const [profileRes, dietRes, scores, todayLogRes, gains, bodyAgeRes] = await Promise.all([
+    supabase.from("profiles").select("*").eq("user_id", user.id).single(),
+    supabase.from("dietary_profiles").select("*").eq("user_id", user.id).single(),
+    syncMyScores(),
+    supabase.from("food_logs").select("*").eq("user_id", user.id).eq("date", todayIso),
+    getGainsScore(user.id),
+    supabase
+      .from("body_age_assessments")
+      .select("body_age_score, chronological_age, date")
+      .eq("user_id", user.id)
+      .order("date", { ascending: false })
+      .limit(1)
+      .single(),
   ]);
 
   const profile = profileRes.data;
+  const todayTotals = sumMacros((todayLogRes.data ?? []) as FoodLogEntry[]);
   const macroPreset = (dietRes.data?.macro_preset ?? "balanced") as MacroPreset;
+  const bodyAge = bodyAgeRes.data ?? null;
 
   const firstName = profile?.name?.split(" ")[0] ?? "there";
   const hour = new Date().getHours();
@@ -119,6 +150,139 @@ export default async function DashboardPage() {
       </div>
 
       <div className="flex-1 px-8 py-6 space-y-6">
+        {/* Gains Score hero */}
+        <div
+          className="rounded-2xl border p-6"
+          style={{ background: "var(--color-surface)", borderColor: "rgba(74,222,128,0.25)" }}
+        >
+          {gains.hasData ? (
+            <>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+              <div className="flex items-end gap-4 shrink-0">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--color-text-muted)" }}>
+                    Gains Score
+                  </p>
+                  <div className="flex items-end gap-2">
+                    <span className="text-6xl font-black leading-none" style={{ color: "var(--color-accent)", letterSpacing: "-0.04em" }}>
+                      {Math.round(gains.score)}
+                    </span>
+                    <span
+                      className="mb-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide"
+                      style={{ background: "var(--color-accent-subtle)", color: "var(--color-accent)" }}
+                    >
+                      {BAND_LABEL[gains.band]}
+                    </span>
+                  </div>
+                  {gains.trend !== 0 && (
+                    <p className="text-xs mt-1" style={{ color: gains.trend > 0 ? "var(--color-accent)" : "var(--color-text-muted)" }}>
+                      {gains.trend > 0 ? "▲" : "▼"} {Math.abs(gains.trend)} this week
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Pillars */}
+              <div className="flex-1 grid grid-cols-2 sm:grid-cols-5 gap-2">
+                {gains.pillars.map((p) => (
+                  <div key={p.key} className="rounded-lg px-3 py-2" style={{ background: "var(--color-bg)" }}>
+                    <p className="text-[10px] uppercase tracking-wide" style={{ color: "var(--color-text-muted)" }}>{p.label}</p>
+                    <p className="text-sm font-bold" style={{ color: p.score == null ? "var(--color-text-muted)" : "var(--color-text)" }}>
+                      {p.score == null ? "—" : Math.round(p.score)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {gains.topLever && (
+                <div className="shrink-0 sm:max-w-52 rounded-lg px-4 py-3" style={{ background: "var(--color-accent-subtle)" }}>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--color-accent)" }}>
+                    Do this next
+                  </p>
+                  <p className="text-xs leading-snug" style={{ color: "var(--color-text)" }}>
+                    {gains.topLever.message}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Body Age chip */}
+            <div className="mt-4 pt-4 border-t flex items-center justify-between" style={{ borderColor: "var(--color-border)" }}>
+              <div className="flex items-center gap-2.5">
+                <HeartPulse size={14} style={{ color: bodyAge ? "#a78bfa" : "var(--color-text-muted)" }} />
+                <span className="text-xs font-semibold" style={{ color: "var(--color-text-muted)" }}>Body Age</span>
+                {bodyAge ? (
+                  <>
+                    <span className="text-sm font-black tabular-nums" style={{ color: "#a78bfa", letterSpacing: "-0.02em" }}>
+                      {bodyAge.body_age_score} yrs
+                    </span>
+                    {bodyAge.chronological_age && bodyAge.body_age_score && (() => {
+                      const delta = bodyAge.body_age_score - bodyAge.chronological_age;
+                      return (
+                        <span className="flex items-center gap-0.5 text-xs font-semibold" style={{ color: delta < -2 ? "#4ade80" : delta > 2 ? "#f87171" : "var(--color-text-secondary)" }}>
+                          {delta < -2 ? <><TrendingDown size={12} />{Math.abs(delta)}y younger</> : delta > 2 ? <><TrendingUp size={12} />{delta}y older</> : "At chronological age"}
+                        </span>
+                      );
+                    })()}
+                  </>
+                ) : (
+                  <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>Not assessed yet</span>
+                )}
+              </div>
+              <Link
+                href="/profile/body-age"
+                className="text-xs font-semibold flex items-center gap-1"
+                style={{ color: "var(--color-accent)" }}
+              >
+                {bodyAge ? "Retest" : "Take test"} <ArrowRight size={11} />
+              </Link>
+            </div>
+            </>
+          ) : (
+            <>
+            <div className="flex items-center gap-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--color-text-muted)" }}>
+                  Gains Score
+                </p>
+                <p className="text-lg font-bold" style={{ color: "var(--color-text)" }}>Building your score</p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--color-text-muted)" }}>
+                  Log food, workouts, and progress for a few days to unlock it.
+                </p>
+              </div>
+            </div>
+
+            {/* Body Age chip — always visible */}
+            <div className="mt-4 pt-4 border-t flex items-center justify-between" style={{ borderColor: "var(--color-border)" }}>
+              <div className="flex items-center gap-2.5">
+                <HeartPulse size={14} style={{ color: bodyAge ? "#a78bfa" : "var(--color-text-muted)" }} />
+                <span className="text-xs font-semibold" style={{ color: "var(--color-text-muted)" }}>Body Age</span>
+                {bodyAge ? (
+                  <>
+                    <span className="text-sm font-black tabular-nums" style={{ color: "#a78bfa", letterSpacing: "-0.02em" }}>
+                      {bodyAge.body_age_score} yrs
+                    </span>
+                    {bodyAge.chronological_age && bodyAge.body_age_score && (() => {
+                      const delta = bodyAge.body_age_score - bodyAge.chronological_age;
+                      return (
+                        <span className="flex items-center gap-0.5 text-xs font-semibold" style={{ color: delta < -2 ? "#4ade80" : delta > 2 ? "#f87171" : "var(--color-text-secondary)" }}>
+                          {delta < -2 ? <><TrendingDown size={12} />{Math.abs(delta)}y younger</> : delta > 2 ? <><TrendingUp size={12} />{delta}y older</> : "At chronological age"}
+                        </span>
+                      );
+                    })()}
+                  </>
+                ) : (
+                  <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>Not assessed yet</span>
+                )}
+              </div>
+              <Link href="/profile/body-age" className="text-xs font-semibold flex items-center gap-1" style={{ color: "var(--color-accent)" }}>
+                {bodyAge ? "Retest" : "Take test"} <ArrowRight size={11} />
+              </Link>
+            </div>
+            </>
+          )}
+        </div>
+
         {/* Onboarding banner */}
         {!isProfileComplete && (
           <div
@@ -161,17 +325,79 @@ export default async function DashboardPage() {
           />
           <StatCard
             label="Active streak"
-            value="0"
-            sub="days in a row"
-            icon={<span className="text-xs font-bold">🔥</span>}
+            value={`${scores.streak}`}
+            sub={scores.streak === 1 ? "day in a row" : "days in a row"}
+            icon={<Flame size={16} />}
           />
           <StatCard
             label="Workouts"
-            value="0"
+            value={`${scores.workoutsWeekly}`}
             sub="this week"
             icon={<Dumbbell size={16} />}
           />
         </div>
+
+        {/* Today's intake */}
+        {macros && (
+          <div
+            className="rounded-xl border p-5"
+            style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold text-sm" style={{ color: "var(--color-text)" }}>
+                Today&apos;s intake
+              </h2>
+              <Link
+                href="/nutrition/log"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
+                style={{ background: "var(--color-accent)", color: "#0a0c0f" }}
+              >
+                <UtensilsCrossed size={12} /> Log food
+              </Link>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <CalorieRing
+                percent={(todayTotals.calories / macros.maintenance.calories) * 100}
+                value={formatNumber(todayTotals.calories)}
+                label={`of ${formatNumber(macros.maintenance.calories)}`}
+              />
+
+              <div className="flex-1 w-full space-y-3">
+                <MacroProgress
+                  label="Protein"
+                  consumed={todayTotals.proteinG}
+                  goal={macros.maintenance.proteinG}
+                  color="#4ade80"
+                />
+                <MacroProgress
+                  label="Carbs"
+                  consumed={todayTotals.carbsG}
+                  goal={macros.maintenance.carbsG}
+                  color="#60a5fa"
+                />
+                <MacroProgress
+                  label="Fat"
+                  consumed={todayTotals.fatG}
+                  goal={macros.maintenance.fatG}
+                  color="#fbbf24"
+                />
+              </div>
+
+              <div
+                className="text-center px-4 py-3 rounded-lg shrink-0 w-full sm:w-auto"
+                style={{ background: "var(--color-bg)" }}
+              >
+                <p className="text-2xl font-bold" style={{ color: "var(--color-accent)", letterSpacing: "-0.02em" }}>
+                  {formatNumber(Math.max(0, macros.maintenance.calories - todayTotals.calories))}
+                </p>
+                <p className="text-[10px] mt-0.5" style={{ color: "var(--color-text-muted)" }}>
+                  kcal remaining
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main grid */}
         <div className="grid lg:grid-cols-5 gap-6">
@@ -294,7 +520,7 @@ export default async function DashboardPage() {
                   <Link
                     key={action.href}
                     href={action.href}
-                    className="group flex flex-col gap-2 p-4 rounded-xl border transition-all duration-200"
+                    className="card-interactive group flex flex-col gap-2 p-4 rounded-xl border"
                     style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}
                   >
                     <div
@@ -380,6 +606,34 @@ function MacroBar({
         <span className="text-xs font-semibold" style={{ color: "var(--color-text)" }}>
           {formatNumber(grams)}g{" "}
           <span style={{ color: "var(--color-text-muted)", fontWeight: 400 }}>({pct}%)</span>
+        </span>
+      </div>
+      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
+        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
+      </div>
+    </div>
+  );
+}
+
+function MacroProgress({
+  label,
+  consumed,
+  goal,
+  color,
+}: {
+  label: string;
+  consumed: number;
+  goal: number;
+  color: string;
+}) {
+  const pct = goal > 0 ? Math.min(100, Math.round((consumed / goal) * 100)) : 0;
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs font-medium" style={{ color: "var(--color-text-secondary)" }}>{label}</span>
+        <span className="text-xs font-semibold" style={{ color: "var(--color-text)" }}>
+          {formatNumber(consumed)}
+          <span style={{ color: "var(--color-text-muted)", fontWeight: 400 }}> / {formatNumber(goal)}g</span>
         </span>
       </div>
       <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>

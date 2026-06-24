@@ -3,6 +3,7 @@ import { ArrowLeft, Dumbbell } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { SessionLogger } from './SessionLogger';
+import { getExerciseHistory } from './actions';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = { title: 'Log Session' };
@@ -55,8 +56,15 @@ export default async function WorkoutLogPage({ searchParams }: { searchParams: S
       exercise_name: e.exercise_name,
       sets: e.sets,
       reps: e.reps,
+      rest_seconds: e.rest_seconds,
     })),
   }));
+
+  // Per-exercise history + PRs for "previous" ghosts and PR detection.
+  const exerciseIds = [
+    ...new Set((exercisesRes.data ?? []).map(e => e.exercise_id)),
+  ];
+  const history = await getExerciseHistory(exerciseIds);
 
   return (
     <div className="flex flex-col min-h-full">
@@ -73,7 +81,7 @@ export default async function WorkoutLogPage({ searchParams }: { searchParams: S
       </div>
 
       <div className="flex-1 px-8 py-6 max-w-2xl">
-        <SessionLogger planId={planId} days={daysWithExercises} />
+        <SessionLogger planId={planId} days={daysWithExercises} history={history} />
       </div>
     </div>
   );

@@ -119,6 +119,7 @@ export default function OnboardingPage() {
   const [data, setData] = useState<OnboardingData>(INITIAL);
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   function update<K extends keyof OnboardingData>(key: K, value: OnboardingData[K]) {
     setData((prev) => ({ ...prev, [key]: value }));
@@ -188,6 +189,12 @@ export default function OnboardingPage() {
     if (!profileRes.error && !dietRes.error) {
       setDone(true);
       setTimeout(() => router.push("/dashboard"), 1800);
+    } else {
+      console.error("[onboarding] save failed", {
+        profile: profileRes.error,
+        dietary: dietRes.error,
+      });
+      setSaveError("We couldn't save your setup. Please try again.");
     }
   }
 
@@ -294,6 +301,22 @@ export default function OnboardingPage() {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Save error */}
+      {saveError && (
+        <div className="px-6 pb-2 max-w-lg mx-auto w-full">
+          <p
+            className="text-sm text-center rounded-lg px-3 py-2"
+            style={{
+              background: "rgba(248,113,113,0.08)",
+              border: "1px solid rgba(248,113,113,0.3)",
+              color: "var(--color-danger)",
+            }}
+          >
+            {saveError}
+          </p>
+        </div>
+      )}
 
       {/* Footer nav */}
       <div className="flex items-center justify-between px-6 pb-8 shrink-0 max-w-lg mx-auto w-full">

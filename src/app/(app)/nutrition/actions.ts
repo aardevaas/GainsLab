@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { recomputeDailyMetrics } from '@/lib/gains/engine';
 
 export type LogFoodInput = {
   foodId?: string;
@@ -42,8 +43,10 @@ export async function logFood(input: LogFoodInput): Promise<void> {
   });
 
   if (error) throw new Error(error.message);
+  await recomputeDailyMetrics(user.id, input.date).catch(() => {});
   revalidatePath('/nutrition');
   revalidatePath('/nutrition/log');
+  revalidatePath('/dashboard');
 }
 
 export async function deleteLogEntry(id: string): Promise<void> {

@@ -24,10 +24,12 @@ export type Database = {
           activity_level: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active' | 'extra_active' | null;
           units: 'metric' | 'imperial';
           onboarding_completed: boolean;
+          timezone: string;
+          is_admin: boolean;
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'id' | 'created_at' | 'updated_at'> & { id?: string };
+        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'id' | 'created_at' | 'updated_at' | 'timezone' | 'is_admin'> & { id?: string; timezone?: string; is_admin?: boolean };
         Update: Partial<Database['public']['Tables']['profiles']['Insert']>;
         Relationships: [];
       };
@@ -89,9 +91,24 @@ export type Database = {
           fiber_g: number | null;
           sugar_g: number | null;
           sodium_mg: number | null;
+          saturated_fat_g: number | null;
+          trans_fat_g: number | null;
+          cholesterol_mg: number | null;
+          added_sugar_g: number | null;
+          micronutrients: Record<string, number> | null;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['food_logs']['Row'], 'id' | 'created_at'> & { id?: string };
+        Insert: Omit<
+          Database['public']['Tables']['food_logs']['Row'],
+          'id' | 'created_at' | 'saturated_fat_g' | 'trans_fat_g' | 'cholesterol_mg' | 'added_sugar_g' | 'micronutrients'
+        > & {
+          id?: string;
+          saturated_fat_g?: number | null;
+          trans_fat_g?: number | null;
+          cholesterol_mg?: number | null;
+          added_sugar_g?: number | null;
+          micronutrients?: Record<string, number> | null;
+        };
         Update: Partial<Database['public']['Tables']['food_logs']['Insert']>;
         Relationships: [];
       };
@@ -170,8 +187,14 @@ export type Database = {
           weight_kg: number | null;
           duration_seconds: number | null;
           notes: string | null;
+          rpe: number | null;
+          is_warmup: boolean;
         };
-        Insert: Omit<Database['public']['Tables']['session_sets']['Row'], 'id'> & { id?: string };
+        Insert: Omit<Database['public']['Tables']['session_sets']['Row'], 'id' | 'rpe' | 'is_warmup'> & {
+          id?: string;
+          rpe?: number | null;
+          is_warmup?: boolean;
+        };
         Update: Partial<Database['public']['Tables']['session_sets']['Insert']>;
         Relationships: [];
       };
@@ -322,16 +345,157 @@ export type Database = {
         Row: {
           id: string;
           user_id: string;
-          plan: 'free' | 'pro' | 'elite';
-          status: 'active' | 'cancelled' | 'past_due' | 'trialing';
-          stripe_customer_id: string | null;
-          stripe_subscription_id: string | null;
-          period_end: string | null;
+          plan_id: string;
+          status: 'active' | 'inactive' | 'expired';
+          started_at: string | null;
+          expires_at: string | null;
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['subscriptions']['Row'], 'id' | 'created_at' | 'updated_at'> & { id?: string };
+        Insert: Omit<Database['public']['Tables']['subscriptions']['Row'], 'id' | 'created_at'> & { id?: string; updated_at?: string };
         Update: Partial<Database['public']['Tables']['subscriptions']['Insert']>;
+        Relationships: [];
+      };
+      payment_submissions: {
+        Row: {
+          id: string;
+          user_id: string;
+          receipt_storage_path: string;
+          plan_id: string;
+          status: 'pending' | 'approved' | 'rejected' | 'flagged';
+          amount_extracted: number | null;
+          transaction_id_extracted: string | null;
+          date_extracted: string | null;
+          destination_extracted: string | null;
+          ocr_raw: Json | null;
+          ocr_confidence: string | null;
+          auto_approved: boolean;
+          reviewed_by: string | null;
+          review_note: string | null;
+          submitted_at: string;
+          reviewed_at: string | null;
+        };
+        Insert: Omit<Database['public']['Tables']['payment_submissions']['Row'], 'id' | 'submitted_at' | 'auto_approved' | 'reviewed_by' | 'review_note' | 'reviewed_at'> & {
+          id?: string;
+          auto_approved?: boolean;
+          reviewed_by?: string | null;
+          review_note?: string | null;
+          reviewed_at?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['payment_submissions']['Insert']>;
+        Relationships: [];
+      };
+      verified_tx_ids: {
+        Row: {
+          transaction_id: string;
+          submission_id: string;
+          user_id: string;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['verified_tx_ids']['Row'], 'created_at'>;
+        Update: Partial<Database['public']['Tables']['verified_tx_ids']['Insert']>;
+        Relationships: [];
+      };
+      daily_targets: {
+        Row: {
+          id: string;
+          user_id: string;
+          date: string;
+          calorie_target: number | null;
+          protein_target: number | null;
+          carb_target: number | null;
+          fat_target: number | null;
+          training_freq_target: number | null;
+          goal: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['daily_targets']['Row'], 'id' | 'created_at'> & { id?: string };
+        Update: Partial<Database['public']['Tables']['daily_targets']['Insert']>;
+        Relationships: [];
+      };
+      daily_metrics: {
+        Row: {
+          id: string;
+          user_id: string;
+          date: string;
+          calories_in: number | null;
+          protein_g: number | null;
+          carbs_g: number | null;
+          fat_g: number | null;
+          calorie_target: number | null;
+          protein_target: number | null;
+          trained: boolean;
+          session_count_week: number | null;
+          training_volume: number | null;
+          est_1rm_snapshot: number | null;
+          sleep_minutes: number | null;
+          sleep_quality: number | null;
+          logged_food: boolean;
+          logged_workout: boolean;
+          logged_progress: boolean;
+          weight_kg: number | null;
+          body_fat_pct: number | null;
+          pillar_nutrition: number | null;
+          pillar_training: number | null;
+          pillar_recovery: number | null;
+          pillar_consistency: number | null;
+          pillar_progress: number | null;
+          daily_score: number | null;
+          gains_score: number | null;
+          goal_snapshot: string | null;
+          computed_at: string;
+        };
+        Insert: { user_id: string; date: string } & Partial<Omit<Database['public']['Tables']['daily_metrics']['Row'], 'user_id' | 'date'>>;
+        Update: Partial<Database['public']['Tables']['daily_metrics']['Insert']>;
+        Relationships: [];
+      };
+      foods: {
+        Row: {
+          id: string;
+          source: string;
+          source_id: string | null;
+          barcode: string | null;
+          name: string;
+          brand: string | null;
+          serving_qty: number | null;
+          serving_unit: string | null;
+          serving_grams: number | null;
+          calories: number | null;
+          protein_g: number | null;
+          carbs_g: number | null;
+          fat_g: number | null;
+          saturated_fat_g: number | null;
+          trans_fat_g: number | null;
+          cholesterol_mg: number | null;
+          sodium_mg: number | null;
+          fiber_g: number | null;
+          sugar_g: number | null;
+          added_sugar_g: number | null;
+          micronutrients: Record<string, number> | null;
+          verified: boolean;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['foods']['Row'], 'id' | 'created_at'> & { id?: string };
+        Update: Partial<Database['public']['Tables']['foods']['Insert']>;
+        Relationships: [];
+      };
+      exercises: {
+        Row: {
+          id: string;
+          source: string;
+          source_id: string | null;
+          name: string;
+          category: string | null;
+          equipment: string | null;
+          primary_muscles: string[] | null;
+          secondary_muscles: string[] | null;
+          instructions: string[] | null;
+          images: string[] | null;
+          gif_url: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['exercises']['Row'], 'id' | 'created_at'> & { id?: string };
+        Update: Partial<Database['public']['Tables']['exercises']['Insert']>;
         Relationships: [];
       };
     };

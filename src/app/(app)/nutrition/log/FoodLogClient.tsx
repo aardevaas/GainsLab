@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useTransition, useOptimistic } from 'react';
-import { Plus, X, Search, ChevronRight, Loader2, Trash2 } from 'lucide-react';
+import { Plus, X, Search, ChevronRight, Loader2, Trash2, BadgeCheck } from 'lucide-react';
 import {
   type FoodItem,
   type FoodLogEntry,
@@ -76,10 +76,14 @@ export function FoodLogClient({ date, entries: initial, goals }: Props) {
   }
 
   function handleSelect(food: FoodItem) {
+    // `servingSize` is the size of ONE serving (e.g. 30g) — not a count. Default
+    // to 1 serving when known (calcFoodMacros multiplies by the gram size), else
+    // 100g. Previously quantity defaulted to the serving SIZE with unit
+    // "serving" (e.g. "30 servings" → 900g → ~4,200 kcal).
     setAddState(s => s && {
       ...s,
       selected: food,
-      quantity: food.servingSize ?? 100,
+      quantity: food.servingSize ? 1 : 100,
       unit: food.servingSize ? 'serving' : 'g',
       results: [],
       query: food.name,
@@ -312,7 +316,18 @@ export function FoodLogClient({ date, entries: initial, goals }: Props) {
                         className="w-full flex items-center justify-between px-4 py-2.5 text-left text-sm transition-colors hover:bg-[var(--color-surface)]"
                       >
                         <div className="min-w-0 flex-1">
-                          <p className="truncate font-medium" style={{ color: 'var(--color-text)' }}>{item.name}</p>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <p className="truncate font-medium" style={{ color: 'var(--color-text)' }}>{item.name}</p>
+                            {item.verified && (
+                              <span
+                                className="shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold"
+                                style={{ background: 'var(--color-accent-subtle)', color: 'var(--color-accent)' }}
+                                title="Lab-verified data (USDA)"
+                              >
+                                <BadgeCheck size={10} /> Verified
+                              </span>
+                            )}
+                          </div>
                           {item.brand && (
                             <p className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>{item.brand}</p>
                           )}

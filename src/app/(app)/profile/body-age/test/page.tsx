@@ -1,11 +1,14 @@
 import Link from 'next/link';
 import { ArrowLeft, Activity } from 'lucide-react';
 import { BodyAgeTestClient } from '../BodyAgeTestClient';
+import { requirePro } from '@/lib/payments/gate';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = { title: 'Body Age Assessment' };
 
-export default function BodyAgeTestPage() {
+export default async function BodyAgeTestPage() {
+  await requirePro();
+
   return (
     <div className="flex flex-col min-h-full">
       <div className="px-8 py-5 border-b flex items-center gap-4" style={{ borderColor: 'var(--color-border-subtle)' }}>

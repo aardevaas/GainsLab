@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { searchExercises } from '@/lib/exercises/db';
+import { cacheExercises } from '@/lib/exercises/cache';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -11,5 +12,6 @@ export async function GET(request: NextRequest) {
     level: searchParams.get('level') ?? undefined,
     limit: Number(searchParams.get('limit') ?? '20'),
   });
+  await cacheExercises(items);
   return NextResponse.json({ items });
 }

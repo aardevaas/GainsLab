@@ -21,6 +21,7 @@ function shortDate(dateStr: string): string {
 export default async function TrackerPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
 
   const thirtyDaysAgo = nDaysAgo(30);
 
@@ -28,19 +29,19 @@ export default async function TrackerPage() {
     supabase
       .from('body_measurements')
       .select('date, weight_kg, body_fat_pct')
-      .eq('user_id', user!.id)
+      .eq('user_id', user.id)
       .gte('date', thirtyDaysAgo)
       .order('date'),
     supabase
       .from('food_logs')
       .select('date')
-      .eq('user_id', user!.id)
+      .eq('user_id', user.id)
       .gte('date', nDaysAgo(7))
       .order('date', { ascending: false }),
     supabase
       .from('workout_sessions')
       .select('date')
-      .eq('user_id', user!.id)
+      .eq('user_id', user.id)
       .eq('completed', true)
       .gte('date', nDaysAgo(7)),
   ]);
@@ -101,7 +102,7 @@ export default async function TrackerPage() {
         </Link>
       </div>
 
-      <div className="flex-1 px-8 py-6 space-y-5 max-w-3xl">
+      <div className="flex-1 px-8 py-6 space-y-5">
         {/* Stat cards */}
         <div className="grid grid-cols-3 gap-3">
           <StatCard
@@ -124,9 +125,11 @@ export default async function TrackerPage() {
           />
         </div>
 
+        {/* Chart + quick nav */}
+        <div className="grid lg:grid-cols-3 gap-6">
         {/* Weight chart */}
         <div
-          className="rounded-xl border p-5"
+          className="lg:col-span-2 rounded-xl border p-5"
           style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
         >
           <div className="flex items-center justify-between mb-4">
@@ -136,14 +139,15 @@ export default async function TrackerPage() {
           <WeightChart data={chartData} showBodyFat={!!latest?.body_fat_pct} />
         </div>
 
-        {/* Quick nav */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* Quick nav (sidebar) */}
+        <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 content-start">
           <NavCard href="/tracker/body" icon={<Scale size={18} />} title="Body measurements" desc="Log weight, BF%, measurements" />
           <NavCard href="/tracker/habits" icon={<Activity size={18} />} title="Habit calendar" desc="90-day activity heatmap" />
           <NavCard href="/tracker/photos" icon={<Camera size={18} />} title="Progress photos" desc="Visual transformation" />
           <NavCard href="/tracker/sleep" icon={<Moon size={18} />} title="Sleep log" desc="Track recovery quality" />
           <NavCard href="/tracker/calories" icon={<Flame size={18} />} title="Calorie dashboard" desc="30-day intake vs TDEE" />
           <NavCard href="/profile/body-age" icon={<HeartPulse size={18} />} title="Body age score" desc="5-test fitness assessment" />
+        </div>
         </div>
       </div>
     </div>
@@ -179,7 +183,7 @@ function NavCard({ href, icon, title, desc }: { href: string; icon: React.ReactN
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 p-4 rounded-xl border transition-all"
+      className="card-interactive flex items-center gap-3 p-4 rounded-xl border"
       style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
     >
       <div

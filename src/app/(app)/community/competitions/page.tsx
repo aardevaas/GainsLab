@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ArrowLeft, Users, Calendar, Gift } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { requirePro } from '@/lib/payments/gate';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = { title: 'Competitions' };
@@ -15,6 +16,7 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export default async function CompetitionsPage() {
+  await requirePro();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const today = new Date().toISOString().split('T')[0];
@@ -48,7 +50,7 @@ export default async function CompetitionsPage() {
     return (
       <Link
         href={`/community/competitions/${comp.id}`}
-        className="block rounded-xl border p-5 transition-all hover:border-[var(--color-accent)]"
+        className="card-interactive block rounded-xl border p-5"
         style={{ background: 'var(--color-surface)', borderColor: isJoined ? 'var(--color-accent)' : 'var(--color-border)' }}
       >
         <div className="flex items-start justify-between gap-4">

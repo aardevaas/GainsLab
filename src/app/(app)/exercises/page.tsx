@@ -1,5 +1,8 @@
 import { Suspense } from 'react';
-import { searchExercises, exerciseImageUrl } from '@/lib/exercises/db';
+import Link from 'next/link';
+import { searchExercises } from '@/lib/exercises/db';
+import { cacheExercises } from '@/lib/exercises/cache';
+import { ExerciseMedia } from '@/components/exercises/ExerciseMedia';
 import {
   MUSCLE_OPTIONS,
   EQUIPMENT_OPTIONS,
@@ -111,6 +114,10 @@ async function ExerciseGrid(filters: {
 }) {
   const exercises = await searchExercises({ ...filters, limit: 120 });
 
+  // Build our proprietary exercise DB over time — persist what gets browsed.
+  // Best-effort: never blocks or breaks the render.
+  await cacheExercises(exercises);
+
   if (exercises.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3">
@@ -132,25 +139,14 @@ async function ExerciseGrid(filters: {
       </p>
       <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
         {exercises.map(ex => (
-          <div
+          <Link
             key={ex.id}
-            className="rounded-xl border overflow-hidden"
+            href={`/exercises/${encodeURIComponent(ex.id)}`}
+            className="card-interactive rom-media rounded-xl border overflow-hidden block"
             style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
           >
-            {/* Thumbnail */}
-            <div
-              className="relative h-28 overflow-hidden"
-              style={{ background: 'var(--color-surface-elevated)' }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={exerciseImageUrl(ex.id, 0)}
-                alt={ex.name}
-                className="w-full h-full object-cover"
-                loading="lazy"
-                onError={undefined}
-              />
-            </div>
+            {/* Range-of-motion media (auto-scrub start → end on hover) */}
+            <ExerciseMedia images={ex.images} alt={ex.name} className="h-28" />
             <div className="p-3">
               <p className="font-semibold text-sm leading-tight mb-1" style={{ color: 'var(--color-text)' }}>
                 {ex.name}
@@ -190,27 +186,8 @@ async function ExerciseGrid(filters: {
                   </span>
                 )}
               </div>
-
-              {/* Instructions preview (first line) */}
-              {ex.instructions[0] && (
-                <details className="mt-2">
-                  <summary
-                    className="text-[11px] cursor-pointer"
-                    style={{ color: 'var(--color-accent)' }}
-                  >
-                    Instructions
-                  </summary>
-                  <ol className="mt-2 space-y-1">
-                    {ex.instructions.slice(0, 4).map((step, i) => (
-                      <li key={i} className="text-[11px] leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-                        {i + 1}. {step}
-                      </li>
-                    ))}
-                  </ol>
-                </details>
-              )}
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

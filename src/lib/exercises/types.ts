@@ -27,7 +27,33 @@ export type Exercise = {
   equipment: string | null;
   category: ExerciseCategory;
   instructions: string[];
+  /** Range-of-motion frames — [start, end] — absolute URLs. */
+  images: string[];
 };
+
+/**
+ * Base for the Free Exercise DB assets (images + dataset). Served via the
+ * jsDelivr `gh` CDN rather than raw.githubusercontent.com — a real global CDN,
+ * purpose-built for GitHub content, with no rate limiting (raw throttles and is
+ * not a sanctioned CDN). Drop-in: the `/exercises/...` and `/dist/...` paths are
+ * identical. (A future Supabase Storage mirror can replace this when we host
+ * our own ROM GIFs.)
+ */
+export const EXERCISE_DB_BASE =
+  'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main';
+
+/**
+ * Deterministic start/end range-of-motion frame URLs for a Free Exercise DB
+ * exercise id. The dataset names every exercise's images `<id>/0.jpg` (start)
+ * and `<id>/1.jpg` (end), so a stored `exercise_id` is enough to render the
+ * auto-scrub media without a round-trip.
+ */
+export function exerciseImageUrls(id: string): [string, string] {
+  return [
+    `${EXERCISE_DB_BASE}/exercises/${id}/0.jpg`,
+    `${EXERCISE_DB_BASE}/exercises/${id}/1.jpg`,
+  ];
+}
 
 export const MUSCLE_OPTIONS: MuscleGroup[] = [
   'abdominals', 'biceps', 'calves', 'chest', 'forearms', 'glutes',
