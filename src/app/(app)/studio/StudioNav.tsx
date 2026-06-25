@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Dumbbell, Users, ExternalLink, BadgeCheck, ClipboardCheck } from 'lucide-react';
+import { LayoutDashboard, Dumbbell, Users, ExternalLink, BadgeCheck, ClipboardCheck, Settings } from 'lucide-react';
 
 const NAV = [
   { label: 'Dashboard', href: '/studio', icon: LayoutDashboard, exact: true },
   { label: 'Programs', href: '/studio/programs', icon: Dumbbell, exact: false },
   { label: 'Clients', href: '/studio/clients', icon: Users, exact: false },
   { label: 'Check-ins', href: '/studio/checkins', icon: ClipboardCheck, exact: false },
+  { label: 'Settings', href: '/studio/settings', icon: Settings, exact: false },
 ];
 
 type Props = {
