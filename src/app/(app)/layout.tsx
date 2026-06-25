@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { PageTransition } from "@/components/layout/PageTransition";
@@ -30,6 +31,16 @@ export default async function AppLayout({
   ]);
 
   const profile = profileRes.data;
+
+  // Gate: send new users to /profile before they can access any app route.
+  // We read the path from the header set by middleware so the layout can
+  // redirect without needing the request object directly.
+  const headerList = await headers();
+  const currentPath = headerList.get('x-invoke-path') ?? '';
+  if (!profile?.onboarding_completed && !currentPath.startsWith('/profile')) {
+    redirect('/profile');
+  }
+
   const sub = subRes.data;
   const isPro =
     sub?.status === "active" &&
@@ -40,6 +51,7 @@ export default async function AppLayout({
   return (
     <div className="flex min-h-dvh" style={{ background: "var(--color-bg)" }}>
       <Sidebar
+        userId={user.id}
         userEmail={user.email ?? ""}
         profileName={profile?.name ?? null}
         avatarUrl={profile?.avatar_url ?? null}

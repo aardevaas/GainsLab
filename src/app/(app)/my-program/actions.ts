@@ -25,3 +25,49 @@ export async function loadMemberDayContent(dayId: string) {
     nutrition: nutrRes.data ?? null,
   };
 }
+
+export async function markDayComplete(dayId: string): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Unauthorized' };
+  const { error } = await supabase
+    .from('program_day_completions')
+    .insert({ user_id: user.id, day_id: dayId });
+  if (error && error.code !== '23505') return { error: error.message };
+  return {};
+}
+
+export async function unmarkDayComplete(dayId: string): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Unauthorized' };
+  const { error } = await supabase
+    .from('program_day_completions')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('day_id', dayId);
+  if (error) return { error: error.message };
+  return {};
+}
+
+export async function submitRating(
+  rosterId: string,
+  creatorId: string,
+  rating: number,
+  reviewText: string,
+): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Unauthorized' };
+
+  const { error } = await supabase.from('creator_ratings').upsert({
+    roster_id: rosterId,
+    creator_id: creatorId,
+    member_user_id: user.id,
+    rating,
+    review_text: reviewText.trim() || null,
+  }, { onConflict: 'roster_id' });
+
+  if (error) return { error: error.message };
+  return {};
+}

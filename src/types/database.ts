@@ -554,16 +554,18 @@ export type Database = {
           avg_client_rating: number | null;
           is_verified: boolean;
           is_featured: boolean;
+          is_accepting_clients: boolean;
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['creator_profiles']['Row'], 'id' | 'created_at' | 'updated_at' | 'total_clients' | 'total_transformations' | 'platform_cut_pct' | 'is_verified' | 'is_featured'> & {
+        Insert: Omit<Database['public']['Tables']['creator_profiles']['Row'], 'id' | 'created_at' | 'updated_at' | 'total_clients' | 'total_transformations' | 'platform_cut_pct' | 'is_verified' | 'is_featured' | 'is_accepting_clients'> & {
           id?: string;
           platform_cut_pct?: number;
           total_clients?: number;
           total_transformations?: number;
           is_verified?: boolean;
           is_featured?: boolean;
+          is_accepting_clients?: boolean;
         };
         Update: Partial<Database['public']['Tables']['creator_profiles']['Insert']>;
         Relationships: [];
@@ -616,6 +618,22 @@ export type Database = {
         };
         Insert: Omit<Database['public']['Tables']['program_days']['Row'], 'id'> & { id?: string; rest_day?: boolean };
         Update: Partial<Database['public']['Tables']['program_days']['Insert']>;
+        Relationships: [];
+      };
+      program_day_completions: {
+        Row: {
+          id: string;
+          user_id: string;
+          day_id: string;
+          completed_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          day_id: string;
+          completed_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['program_day_completions']['Insert']>;
         Relationships: [];
       };
       program_exercises: {
@@ -685,6 +703,28 @@ export type Database = {
           current_week?: number;
         };
         Update: Partial<Database['public']['Tables']['client_roster']['Insert']>;
+        Relationships: [];
+      };
+      creator_ratings: {
+        Row: {
+          id: string;
+          roster_id: string;
+          creator_id: string;
+          member_user_id: string;
+          rating: number;
+          review_text: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          roster_id: string;
+          creator_id: string;
+          member_user_id: string;
+          rating: number;
+          review_text?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['creator_ratings']['Insert']>;
         Relationships: [];
       };
       creator_communities: {
@@ -789,6 +829,39 @@ export type Database = {
         };
         Insert: Omit<Database['public']['Tables']['creator_recipes']['Row'], 'id' | 'created_at'> & { id?: string; access_level?: 'free' | 'community' | 'pack'; tags?: string[]; instructions?: string[] };
         Update: Partial<Database['public']['Tables']['creator_recipes']['Insert']>;
+        Relationships: [];
+      };
+      messages: {
+        Row: {
+          id: string;
+          roster_id: string;
+          sender_id: string;
+          body: string;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['messages']['Row'], 'id' | 'created_at' | 'read_at'> & { id?: string; read_at?: string | null };
+        Update: Partial<Database['public']['Tables']['messages']['Insert']>;
+        Relationships: [];
+      };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: string;
+          title: string;
+          body: string | null;
+          href: string | null;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['notifications']['Row'], 'id' | 'created_at' | 'read_at' | 'body' | 'href'> & {
+          id?: string;
+          body?: string | null;
+          href?: string | null;
+          read_at?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['notifications']['Insert']>;
         Relationships: [];
       };
       automated_checkins: {

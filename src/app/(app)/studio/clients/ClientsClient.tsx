@@ -1,8 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { useActionState, useState } from 'react';
 import { assignClient, approveJoinRequest, declineJoinRequest, type ClientState } from './actions';
-import { Plus, X, Loader2, Check, Users, UserCheck, UserX } from 'lucide-react';
+import { Plus, X, Loader2, Check, Users, UserCheck, UserX, ChevronRight } from 'lucide-react';
 
 type Program = { id: string; title: string; type: string };
 
@@ -232,12 +233,12 @@ export function ClientsClient({ clients, programs, profileMap }: Props) {
       ) : (
         <div style={{ border: '1px solid var(--color-border-subtle)', borderRadius: 14, overflow: 'hidden' }}>
           <div style={{
-            display: 'grid', gridTemplateColumns: '2fr 1.5fr 100px 100px 80px',
+            display: 'grid', gridTemplateColumns: '2fr 1.5fr 100px 100px 80px 64px',
             padding: '10px 20px',
             background: 'var(--color-surface)',
             borderBottom: '1px solid var(--color-border-subtle)',
           }}>
-            {['Client', 'Program', 'Status', 'Progress', 'Since'].map(h => (
+            {['Client', 'Program', 'Status', 'Progress', 'Since', ''].map(h => (
               <span key={h} style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
                 {h}
               </span>
@@ -249,7 +250,7 @@ export function ClientsClient({ clients, programs, profileMap }: Props) {
             const name = displayName(c.member_user_id);
             return (
               <div key={c.id} style={{
-                display: 'grid', gridTemplateColumns: '2fr 1.5fr 100px 100px 80px',
+                display: 'grid', gridTemplateColumns: '2fr 1.5fr 100px 100px 80px 64px',
                 padding: '14px 20px', alignItems: 'center',
                 borderBottom: i < activeClients.length - 1 ? '1px solid var(--color-border-subtle)' : 'none',
                 background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)',
@@ -284,6 +285,15 @@ export function ClientsClient({ clients, programs, profileMap }: Props) {
                 <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
                   {new Date(c.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </span>
+                <Link href={`/studio/clients/${c.id}`} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 3,
+                  fontSize: 11, fontWeight: 700, color: '#60a5fa',
+                  textDecoration: 'none', padding: '5px 8px',
+                  borderRadius: 7, background: 'rgba(96,165,250,0.08)',
+                  border: '1px solid rgba(96,165,250,0.15)',
+                }}>
+                  View <ChevronRight size={11} />
+                </Link>
               </div>
             );
           })}

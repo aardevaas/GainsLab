@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { ChevronDown, ChevronRight, Moon, Dumbbell, Clock, RotateCcw, StickyNote } from 'lucide-react';
-import { loadMemberDayContent } from './actions';
+import { useState, useEffect, useOptimistic, useTransition } from 'react';
+import { ChevronDown, ChevronRight, Moon, Dumbbell, Clock, RotateCcw, StickyNote, CheckCircle2, Circle } from 'lucide-react';
+import { loadMemberDayContent, markDayComplete, unmarkDayComplete } from './actions';
 
 type Exercise = {
   exercise_name: string;
@@ -40,6 +40,7 @@ type Props = {
   program: Program;
   creator: Creator;
   weeks: Week[];
+  initialCompletedDayIds: string[];
 };
 
 const TYPE_COLOR: Record<string, string> = {
@@ -75,7 +76,7 @@ function computeCurrentDayId(startDate: string, weeks: Week[]): string | null {
   return allDays[idx]?.id ?? null;
 }
 
-export function ProgramViewClient({ roster, program, creator, weeks }: Props) {
+export function ProgramViewClient({ roster, program, creator, weeks, initialCompletedDayIds }: Props) {
   const allDays = weeks.flatMap(w => w.days);
   const totalDays = allDays.length;
 
@@ -89,7 +90,28 @@ export function ProgramViewClient({ roster, program, creator, weeks }: Props) {
   const [dayContent, setDayContent] = useState<{ exercises: Exercise[]; nutrition: Nutrition | null } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const activeRef = useRef(false);
+  const [completedIds, setOptimisticCompleted] = useOptimistic(
+    new Set<string>(initialCompletedDayIds),
+    (prev, action: { type: 'add' | 'remove'; dayId: string }) => {
+      const next = new Set(prev);
+      action.type === 'add' ? next.add(action.dayId) : next.delete(action.dayId);
+      return next;
+    }
+  );
+
+  const [isPending, startTransition] = useTransition();
+
+  function toggleComplete(dayId: string) {
+    const alreadyDone = completedIds.has(dayId);
+    startTransition(async () => {
+      setOptimisticCompleted({ type: alreadyDone ? 'remove' : 'add', dayId });
+      if (alreadyDone) {
+        await unmarkDayComplete(dayId);
+      } else {
+        await markDayComplete(dayId);
+      }
+    });
+  }
 
   useEffect(() => {
     if (!selectedDayId) return;
@@ -108,8 +130,8 @@ export function ProgramViewClient({ roster, program, creator, weeks }: Props) {
   const selectedDay = allDays.find(d => d.id === selectedDayId);
   const selectedWeek = weeks.find(w => w.days.some(d => d.id === selectedDayId));
 
-  const currentDayIndex = allDays.findIndex(d => d.id === currentDayId);
-  const progressPct = totalDays > 0 ? Math.round(((currentDayIndex + 1) / totalDays) * 100) : 0;
+  const completedCount = completedIds.size;
+  const progressPct = totalDays > 0 ? Math.round((completedCount / totalDays) * 100) : 0;
 
   const typeColor = TYPE_COLOR[program.type] ?? '#60a5fa';
 
@@ -161,16 +183,16 @@ export function ProgramViewClient({ roster, program, creator, weeks }: Props) {
             )}
           </div>
 
-          {/* Week/day counter */}
+          {/* Completion counter */}
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
             <p style={{ fontSize: 20, fontWeight: 900, color: 'var(--color-text)', letterSpacing: '-0.04em', margin: 0 }}>
-              {selectedWeek ? `W${selectedWeek.week_number}` : '—'}
+              {completedCount}
               <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--color-text-muted)' }}>
-                /{program.duration_weeks}
+                /{totalDays}
               </span>
             </p>
             <p style={{ fontSize: 11, color: 'var(--color-text-muted)', margin: '1px 0 0' }}>
-              Day {currentDayIndex + 1} of {totalDays}
+              days completed
             </p>
           </div>
         </div>
@@ -181,7 +203,7 @@ export function ProgramViewClient({ roster, program, creator, weeks }: Props) {
             height: '100%', borderRadius: 2,
             width: `${progressPct}%`,
             background: `linear-gradient(90deg, ${typeColor}99, ${typeColor})`,
-            transition: 'width 600ms ease',
+            transition: 'width 400ms ease',
           }} />
         </div>
         <p style={{ fontSize: 10, color: 'var(--color-text-muted)', margin: '4px 0 0', fontFamily: 'var(--font-mono)' }}>
@@ -202,6 +224,7 @@ export function ProgramViewClient({ roster, program, creator, weeks }: Props) {
         }}>
           {weeks.map(week => {
             const expanded = expandedWeeks.has(week.id);
+            const weekCompleted = week.days.length > 0 && week.days.every(d => completedIds.has(d.id));
             return (
               <div key={week.id}>
                 <button type="button" onClick={() => toggleWeek(week.id)} style={{
@@ -214,16 +237,18 @@ export function ProgramViewClient({ roster, program, creator, weeks }: Props) {
                     : <ChevronRight size={11} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />}
                   <span style={{
                     fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
-                    letterSpacing: '0.1em', color: 'var(--color-text-muted)',
-                    fontFamily: 'var(--font-mono)',
+                    letterSpacing: '0.1em', color: weekCompleted ? '#4ade80' : 'var(--color-text-muted)',
+                    fontFamily: 'var(--font-mono)', flex: 1,
                   }}>
                     {week.title ?? `Week ${week.week_number}`}
                   </span>
+                  {weekCompleted && <CheckCircle2 size={10} style={{ color: '#4ade80', flexShrink: 0 }} />}
                 </button>
 
                 {expanded && week.days.map(day => {
                   const isSelected = selectedDayId === day.id;
                   const isCurrent = day.id === currentDayId;
+                  const isDone = completedIds.has(day.id);
                   return (
                     <button
                       key={day.id}
@@ -240,17 +265,19 @@ export function ProgramViewClient({ roster, program, creator, weeks }: Props) {
                     >
                       <div style={{
                         width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
-                        background: day.rest_day ? '#fbbf24' : isSelected ? '#60a5fa' : 'var(--color-border)',
+                        background: isDone ? '#4ade80' : day.rest_day ? '#fbbf24' : isSelected ? '#60a5fa' : 'var(--color-border)',
                       }} />
                       <span style={{
                         fontSize: 12,
                         fontWeight: isSelected ? 700 : 500,
-                        color: isSelected ? '#60a5fa' : day.rest_day ? 'var(--color-text-muted)' : 'var(--color-text-secondary)',
+                        color: isDone ? '#4ade80' : isSelected ? '#60a5fa' : day.rest_day ? 'var(--color-text-muted)' : 'var(--color-text-secondary)',
                         flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        textDecoration: isDone ? 'line-through' : 'none',
+                        textDecorationColor: 'rgba(74,222,128,0.4)',
                       }}>
                         {day.title ?? DAY_LABELS[day.day_number - 1] ?? `Day ${day.day_number}`}
                       </span>
-                      {isCurrent && !isSelected && (
+                      {isCurrent && !isSelected && !isDone && (
                         <span style={{
                           fontSize: 8, fontWeight: 800, color: typeColor,
                           background: `${typeColor}18`, padding: '1px 5px', borderRadius: 3,
@@ -259,7 +286,8 @@ export function ProgramViewClient({ roster, program, creator, weeks }: Props) {
                           Today
                         </span>
                       )}
-                      {day.rest_day && <Moon size={9} style={{ color: '#fbbf24', flexShrink: 0 }} />}
+                      {isDone && <CheckCircle2 size={10} style={{ color: '#4ade80', flexShrink: 0 }} />}
+                      {!isDone && day.rest_day && <Moon size={9} style={{ color: '#fbbf24', flexShrink: 0 }} />}
                     </button>
                   );
                 })}
@@ -276,15 +304,23 @@ export function ProgramViewClient({ roster, program, creator, weeks }: Props) {
             </div>
           ) : selectedDay.rest_day ? (
             <RestDayView
+              dayId={selectedDay.id}
               dayLabel={selectedDay.title ?? DAY_LABELS[selectedDay.day_number - 1] ?? `Day ${selectedDay.day_number}`}
               weekNumber={selectedWeek?.week_number ?? 1}
               isCurrent={selectedDay.id === currentDayId}
+              isDone={completedIds.has(selectedDay.id)}
+              isPending={isPending}
+              onToggle={() => toggleComplete(selectedDay.id)}
             />
           ) : (
             <TrainingDayView
+              dayId={selectedDay.id}
               dayLabel={selectedDay.title ?? DAY_LABELS[selectedDay.day_number - 1] ?? `Day ${selectedDay.day_number}`}
               weekNumber={selectedWeek?.week_number ?? 1}
               isCurrent={selectedDay.id === currentDayId}
+              isDone={completedIds.has(selectedDay.id)}
+              isPending={isPending}
+              onToggle={() => toggleComplete(selectedDay.id)}
               isLoading={isLoading}
               exercises={dayContent?.exercises ?? []}
               nutrition={dayContent?.nutrition ?? null}
@@ -296,9 +332,35 @@ export function ProgramViewClient({ roster, program, creator, weeks }: Props) {
   );
 }
 
-function RestDayView({ dayLabel, weekNumber, isCurrent }: {
-  dayLabel: string; weekNumber: number; isCurrent: boolean;
+function CompletionButton({ isDone, isPending, onToggle }: { isDone: boolean; isPending: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      disabled={isPending}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 7,
+        padding: '9px 18px', borderRadius: 10, cursor: isPending ? 'not-allowed' : 'pointer',
+        background: isDone ? 'rgba(74,222,128,0.1)' : 'rgba(74,222,128,0.06)',
+        border: `1px solid ${isDone ? 'rgba(74,222,128,0.3)' : 'rgba(74,222,128,0.15)'}`,
+        color: isDone ? '#4ade80' : 'var(--color-text-muted)',
+        fontSize: 13, fontWeight: 700,
+        transition: 'all 150ms ease',
+        opacity: isPending ? 0.6 : 1,
+      } as React.CSSProperties}
+    >
+      {isDone
+        ? <><CheckCircle2 size={15} style={{ color: '#4ade80' }} /> Completed</>
+        : <><Circle size={15} /> Mark complete</>}
+    </button>
+  );
+}
+
+function RestDayView({ dayId, dayLabel, weekNumber, isCurrent, isDone, isPending, onToggle }: {
+  dayId: string; dayLabel: string; weekNumber: number; isCurrent: boolean;
+  isDone: boolean; isPending: boolean; onToggle: () => void;
 }) {
+  void dayId;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 320, gap: 16, textAlign: 'center' }}>
       <div style={{
@@ -315,37 +377,43 @@ function RestDayView({ dayLabel, weekNumber, isCurrent }: {
         <h2 style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-text)', margin: '0 0 8px', letterSpacing: '-0.03em' }}>
           Recovery Day
         </h2>
-        <p style={{ fontSize: 13, color: 'var(--color-text-muted)', margin: 0, maxWidth: 340, lineHeight: 1.6 }}>
+        <p style={{ fontSize: 13, color: 'var(--color-text-muted)', margin: '0 0 20px', maxWidth: 340, lineHeight: 1.6 }}>
           {isCurrent
             ? 'Today is a rest day. Focus on sleep, hydration, and light movement. Your body grows stronger when it recovers.'
             : 'No training scheduled. Recovery is part of the program.'}
         </p>
+        <CompletionButton isDone={isDone} isPending={isPending} onToggle={onToggle} />
       </div>
     </div>
   );
 }
 
-function TrainingDayView({ dayLabel, weekNumber, isCurrent, isLoading, exercises, nutrition }: {
-  dayLabel: string; weekNumber: number; isCurrent: boolean;
+function TrainingDayView({ dayId, dayLabel, weekNumber, isCurrent, isDone, isPending, onToggle, isLoading, exercises, nutrition }: {
+  dayId: string; dayLabel: string; weekNumber: number; isCurrent: boolean;
+  isDone: boolean; isPending: boolean; onToggle: () => void;
   isLoading: boolean; exercises: Exercise[]; nutrition: Nutrition | null;
 }) {
+  void dayId;
   return (
     <div style={{ maxWidth: 680 }}>
       {/* Day header */}
       <div style={{ marginBottom: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-          <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--color-text-muted)', margin: 0, fontFamily: 'var(--font-mono)' }}>
-            Week {weekNumber} · {dayLabel}
-          </p>
-          {isCurrent && (
-            <span style={{
-              fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em',
-              color: '#4ade80', background: 'rgba(74,222,128,0.12)', padding: '2px 7px', borderRadius: 4,
-              fontFamily: 'var(--font-mono)',
-            }}>
-              Today
-            </span>
-          )}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--color-text-muted)', margin: 0, fontFamily: 'var(--font-mono)' }}>
+              Week {weekNumber} · {dayLabel}
+            </p>
+            {isCurrent && (
+              <span style={{
+                fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em',
+                color: '#4ade80', background: 'rgba(74,222,128,0.12)', padding: '2px 7px', borderRadius: 4,
+                fontFamily: 'var(--font-mono)',
+              }}>
+                Today
+              </span>
+            )}
+          </div>
+          <CompletionButton isDone={isDone} isPending={isPending} onToggle={onToggle} />
         </div>
         <h2 style={{ fontSize: 20, fontWeight: 900, color: 'var(--color-text)', margin: 0, letterSpacing: '-0.03em' }}>
           Training Day

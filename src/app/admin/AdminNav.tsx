@@ -12,14 +12,15 @@ export function AdminNav({ pendingPayments, pendingCreators }: Props) {
   const pathname = usePathname();
 
   const tabs = [
-    { label: 'Creators', href: '/admin/creators', badge: pendingCreators },
-    { label: 'Payments', href: '/admin/payments', badge: pendingPayments },
+    { label: 'Overview', href: '/admin', exact: true, badge: 0 },
+    { label: 'Creators', href: '/admin/creators', exact: false, badge: pendingCreators },
+    { label: 'Payments', href: '/admin/payments', exact: false, badge: pendingPayments },
   ];
 
   return (
     <div style={{ display: 'flex', gap: 0, paddingLeft: 20, borderTop: '1px solid var(--color-border)' }}>
-      {tabs.map(({ label, href, badge }) => {
-        const active = pathname.startsWith(href);
+      {tabs.map(({ label, href, exact, badge }) => {
+        const active = exact ? pathname === href : pathname.startsWith(href);
         return (
           <Link key={href} href={href} style={{
             display: 'flex', alignItems: 'center', gap: 6,

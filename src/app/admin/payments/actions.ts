@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { activateSubscription } from '@/lib/payments/subscription';
+import { createNotification } from '@/lib/notifications';
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -49,11 +50,26 @@ export async function approveSubmission(submissionId: string, note?: string): Pr
   }
 
   await activateSubscription(submission.user_id, submission.plan_id);
+
+  await createNotification({
+    userId: submission.user_id,
+    type: 'payment_approved',
+    title: 'Payment approved — you\'re Pro!',
+    body: 'Your subscription is now active. Enjoy full access to GainsLab Pro.',
+    href: '/dashboard',
+  });
+
   revalidatePath('/admin/payments');
 }
 
 export async function rejectSubmission(submissionId: string, note: string): Promise<void> {
   const { supabase, adminId } = await requireAdmin();
+
+  const { data: submission } = await supabase
+    .from('payment_submissions')
+    .select('user_id')
+    .eq('id', submissionId)
+    .single();
 
   await supabase
     .from('payment_submissions')
@@ -64,6 +80,16 @@ export async function rejectSubmission(submissionId: string, note: string): Prom
       review_note: note || 'Receipt could not be verified.',
     })
     .eq('id', submissionId);
+
+  if (submission) {
+    await createNotification({
+      userId: submission.user_id,
+      type: 'payment_rejected',
+      title: 'Payment could not be verified',
+      body: note || 'Your receipt could not be verified. Please resubmit with a clear screenshot of the transfer.',
+      href: '/subscribe',
+    });
+  }
 
   revalidatePath('/admin/payments');
 }

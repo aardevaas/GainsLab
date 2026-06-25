@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { Check } from 'lucide-react';
-import { updateProfile, type ProfileUpdateData } from './actions';
+import { useRef, useState, useTransition } from 'react';
+import { Check, Upload } from 'lucide-react';
+import { updateProfile, uploadCreatorAvatar, type ProfileUpdateData } from './actions';
 
 const SPECIALTIES: { value: string; label: string }[] = [
   { value: 'fat_loss',          label: 'Fat Loss' },
@@ -35,13 +35,17 @@ type Props = {
     city: string | null;
     community_price_bob: number | null;
     slug: string;
+    is_accepting_clients: boolean;
   };
 };
 
 export function ProfileSettingsClient({ profile }: Props) {
   const [isPending, startTransition] = useTransition();
+  const [isUploadingAvatar, startUploadTransition] = useTransition();
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [displayName, setDisplayName] = useState(profile.display_name);
   const [bio, setBio] = useState(profile.bio ?? '');
@@ -59,11 +63,27 @@ export function ProfileSettingsClient({ profile }: Props) {
   const [communityPrice, setCommunityPrice] = useState<string>(
     profile.community_price_bob != null ? String(profile.community_price_bob) : ''
   );
+  const [isAcceptingClients, setIsAcceptingClients] = useState(profile.is_accepting_clients);
 
   function toggleSpecialty(value: string) {
     setSpecialty(prev =>
       prev.includes(value) ? prev.filter(s => s !== value) : [...prev, value]
     );
+  }
+
+  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarError(null);
+    const fd = new FormData();
+    fd.append('avatar', file);
+    startUploadTransition(async () => {
+      const res = await uploadCreatorAvatar(fd);
+      if ('error' in res) { setAvatarError(res.error); return; }
+      setAvatarUrl(res.url);
+    });
+    // Reset so the same file can be re-selected if needed
+    e.target.value = '';
   }
 
   function handleSave() {
@@ -83,6 +103,7 @@ export function ProfileSettingsClient({ profile }: Props) {
       country,
       city,
       communityPrice: communityPrice ? Number(communityPrice) : null,
+      isAcceptingClients,
     };
 
     startTransition(async () => {
@@ -166,24 +187,57 @@ export function ProfileSettingsClient({ profile }: Props) {
             />
           </div>
           <div>
-            {fieldLabel('Avatar URL')}
-            <input
-              type="url"
-              value={avatarUrl}
-              onChange={e => setAvatarUrl(e.target.value)}
-              placeholder="https://…"
-              style={fieldStyle}
-            />
-            {avatarUrl && (
-              <img
-                src={avatarUrl}
-                alt="Preview"
-                style={{
-                  marginTop: 8, width: 52, height: 52, borderRadius: '50%',
-                  objectFit: 'cover', border: '2px solid var(--color-border)',
-                }}
+            {fieldLabel('Profile photo')}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              {/* Avatar preview */}
+              <div style={{
+                width: 64, height: 64, borderRadius: '50%', flexShrink: 0,
+                border: '2px solid var(--color-border)',
+                background: 'var(--color-surface-elevated)',
+                overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--color-text-muted)' }}>
+                    {displayName.slice(0, 1).toUpperCase() || '?'}
+                  </span>
+                )}
+              </div>
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleAvatarChange}
+                style={{ display: 'none' }}
               />
-            )}
+              {/* Upload button */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <button
+                  type="button"
+                  disabled={isUploadingAvatar}
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    fontSize: 12, fontWeight: 700, padding: '7px 14px', borderRadius: 8,
+                    border: '1px solid var(--color-border)',
+                    background: 'var(--color-surface-elevated)',
+                    color: 'var(--color-text-secondary)', cursor: isUploadingAvatar ? 'not-allowed' : 'pointer',
+                    opacity: isUploadingAvatar ? 0.6 : 1,
+                  }}
+                >
+                  <Upload size={13} />
+                  {isUploadingAvatar ? 'Uploading…' : 'Upload photo'}
+                </button>
+                <p style={{ fontSize: 11, color: 'var(--color-text-muted)', margin: 0 }}>
+                  JPG, PNG or WEBP · max 5 MB
+                </p>
+                {avatarError && (
+                  <p style={{ fontSize: 11, color: '#f87171', margin: 0 }}>{avatarError}</p>
+                )}
+              </div>
+            </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
@@ -300,6 +354,44 @@ export function ProfileSettingsClient({ profile }: Props) {
         <p style={{ fontSize: 11, color: 'var(--color-text-muted)', margin: '6px 0 0' }}>
           Leave at 0 for a free community.
         </p>
+      </section>
+
+      {/* Accepting clients toggle */}
+      <section>
+        {sectionLabel('Intake')}
+        <label style={{
+          display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer',
+          padding: '14px 16px', borderRadius: 12,
+          background: isAcceptingClients ? 'rgba(74,222,128,0.06)' : 'rgba(248,113,113,0.06)',
+          border: `1px solid ${isAcceptingClients ? 'rgba(74,222,128,0.2)' : 'rgba(248,113,113,0.2)'}`,
+          transition: 'all 200ms ease',
+        }}>
+          {/* pill toggle */}
+          <div
+            onClick={() => setIsAcceptingClients(p => !p)}
+            style={{
+              width: 44, height: 24, borderRadius: 12, flexShrink: 0,
+              background: isAcceptingClients ? '#4ade80' : '#f87171',
+              position: 'relative', cursor: 'pointer', transition: 'background 200ms ease',
+            }}
+          >
+            <div style={{
+              position: 'absolute', top: 3, left: isAcceptingClients ? 23 : 3,
+              width: 18, height: 18, borderRadius: '50%', background: '#fff',
+              transition: 'left 200ms ease', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+            }} />
+          </div>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)', margin: '0 0 2px' }}>
+              {isAcceptingClients ? 'Accepting new clients' : 'Not accepting clients'}
+            </p>
+            <p style={{ fontSize: 11, color: 'var(--color-text-muted)', margin: 0 }}>
+              {isAcceptingClients
+                ? 'The "Request to Join" button is visible on your public page.'
+                : 'Join requests are hidden and blocked on your public page.'}
+            </p>
+          </div>
+        </label>
       </section>
 
       {/* Error / save */}

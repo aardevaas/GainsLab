@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import {
   ArrowLeft, MapPin, Globe, ExternalLink,
   Star, Shield, Users, TrendingUp, Trophy, Clock,
-  ChevronRight, Lock, Zap,
+  ChevronRight, Lock, Zap, MessageSquare,
 } from 'lucide-react';
 import { JoinRequestButton } from './JoinRequestButton';
 import type { Metadata } from 'next';
@@ -32,9 +32,35 @@ function typeLabel(t: string) {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const supabase = await createClient();
-  const { data } = await supabase.from('creator_profiles').select('display_name, bio').eq('slug', slug).single();
+  const { data } = await supabase
+    .from('creator_profiles')
+    .select('display_name, bio, avatar_url')
+    .eq('slug', slug)
+    .eq('is_verified', true)
+    .single();
   if (!data) return { title: 'Creator Not Found' };
-  return { title: data.display_name, description: data.bio ?? `${data.display_name} on GainsLab` };
+
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://gainslab.app';
+  const pageUrl = `${siteUrl}/creator/${slug}`;
+  const description = data.bio ?? `${data.display_name} on GainsLab`;
+
+  return {
+    title: data.display_name,
+    description,
+    openGraph: {
+      title: data.display_name,
+      description,
+      url: pageUrl,
+      type: 'profile',
+      ...(data.avatar_url ? { images: [{ url: data.avatar_url, width: 400, height: 400, alt: data.display_name }] } : {}),
+    },
+    twitter: {
+      card: 'summary',
+      title: data.display_name,
+      description,
+      ...(data.avatar_url ? { images: [data.avatar_url] } : {}),
+    },
+  };
 }
 
 export default async function CreatorProfilePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -42,7 +68,7 @@ export default async function CreatorProfilePage({ params }: { params: Promise<{
   const supabase = await createClient();
 
   const [creatorRes, authRes] = await Promise.all([
-    supabase.from('creator_profiles').select('*').eq('slug', slug).single(),
+    supabase.from('creator_profiles').select('*').eq('slug', slug).eq('is_verified', true).single(),
     supabase.auth.getUser(),
   ]);
 
@@ -50,16 +76,24 @@ export default async function CreatorProfilePage({ params }: { params: Promise<{
   if (!creator) notFound();
   const user = authRes.data.user;
 
-  const [programsRes, communityRes, rosterRes] = await Promise.all([
+  const [programsRes, communityRes, rosterRes, ratingsRes] = await Promise.all([
     supabase.from('programs').select('*').eq('creator_id', creator.id).eq('is_published', true).order('created_at'),
     supabase.from('creator_communities').select('*').eq('creator_id', creator.id).maybeSingle(),
     user
       ? supabase.from('client_roster').select('id, status, notes').eq('creator_id', creator.id).eq('member_user_id', user.id).maybeSingle()
       : Promise.resolve({ data: null }),
+    supabase
+      .from('creator_ratings')
+      .select('rating, review_text, created_at, member_user_id')
+      .eq('creator_id', creator.id)
+      .not('review_text', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(6),
   ]);
 
   const programs = programsRes.data ?? [];
   const community = communityRes.data;
+  const reviews = (ratingsRes.data ?? []).filter(r => r.review_text);
   const rosterEntry = rosterRes.data;
   const isMember = rosterEntry?.status === 'active';
   const isRequested = rosterEntry?.notes === '__join_request__' && rosterEntry?.status === 'paused';
@@ -197,12 +231,20 @@ export default async function CreatorProfilePage({ params }: { params: Promise<{
                 }}>
                   Go to Dashboard <ChevronRight size={14} />
                 </Link>
-              ) : user ? (
+              ) : user && creator.is_accepting_clients ? (
                 <JoinRequestButton
                   creatorId={creator.id}
                   communityPriceBob={creator.community_price_bob}
                   initialRequested={isRequested}
                 />
+              ) : user ? (
+                <div style={{
+                  padding: '9px 18px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+                  background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)',
+                  color: '#f87171',
+                }}>
+                  Not accepting clients right now
+                </div>
               ) : (
                 <>
                   <Link href="/signup" style={{
@@ -405,6 +447,65 @@ export default async function CreatorProfilePage({ params }: { params: Promise<{
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* ── CLIENT REVIEWS ────────────────────────────────── */}
+        {(creator.avg_client_rating || reviews.length > 0) && (
+          <div style={{ marginTop: 52 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+              <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)', margin: 0 }}>
+                Client Reviews
+              </p>
+              {creator.avg_client_rating && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <Star size={12} style={{ color: '#fbbf24', fill: '#fbbf24' }} />
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#fbbf24' }}>
+                    {Number(creator.avg_client_rating).toFixed(1)}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {reviews.length === 0 ? (
+              <div style={{
+                padding: '32px 24px', borderRadius: 14, textAlign: 'center',
+                border: '1px solid var(--color-border-subtle)', background: 'var(--color-surface)',
+              }}>
+                <MessageSquare size={24} style={{ color: 'var(--color-text-muted)', marginBottom: 10 }} />
+                <p style={{ fontSize: 13, color: 'var(--color-text-muted)', margin: 0 }}>
+                  No written reviews yet — clients rate privately until they leave a note.
+                </p>
+              </div>
+            ) : (
+              <div style={{
+                display: 'grid', gap: 14,
+                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+              }}>
+                {reviews.map((r, i) => (
+                  <div key={i} style={{
+                    background: 'var(--color-surface)', border: '1px solid var(--color-border-subtle)',
+                    borderRadius: 14, padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 10,
+                  }}>
+                    {/* Stars */}
+                    <div style={{ display: 'flex', gap: 3 }}>
+                      {[1, 2, 3, 4, 5].map(n => (
+                        <Star key={n} size={13} style={{
+                          color: n <= r.rating ? '#fbbf24' : 'var(--color-border)',
+                          fill: n <= r.rating ? '#fbbf24' : 'transparent',
+                        }} />
+                      ))}
+                    </div>
+                    <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.65, margin: 0, fontStyle: 'italic' }}>
+                      &ldquo;{r.review_text}&rdquo;
+                    </p>
+                    <p style={{ fontSize: 11, color: 'var(--color-text-muted)', margin: 0, fontFamily: 'var(--font-mono)' }}>
+                      Verified client · {new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

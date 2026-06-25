@@ -31,7 +31,8 @@ export default async function DiscoverPage({ searchParams }: Props) {
 
   let query = supabase
     .from('creator_profiles')
-    .select('id, display_name, slug, bio, avatar_url, specialty, city, country, total_clients, avg_client_rating, experience_years, community_price_bob, is_verified, is_featured')
+    .select('id, display_name, slug, bio, avatar_url, specialty, city, country, total_clients, avg_client_rating, experience_years, community_price_bob, is_verified, is_featured, is_accepting_clients')
+    .eq('is_verified', true)
     .order('is_featured', { ascending: false })
     .order('total_clients', { ascending: false });
 
@@ -140,6 +141,7 @@ type Creator = {
   community_price_bob: number | null;
   is_verified: boolean;
   is_featured: boolean;
+  is_accepting_clients: boolean;
 };
 
 const SPECIALTY_LABELS: Record<string, string> = {
@@ -202,6 +204,14 @@ function CreatorCard({ creator: c }: { creator: Creator }) {
                   padding: '2px 6px', borderRadius: 3, background: 'rgba(251,191,36,0.12)', color: '#fbbf24',
                 }}>
                   Featured
+                </span>
+              )}
+              {!c.is_accepting_clients && (
+                <span style={{
+                  fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase',
+                  padding: '2px 6px', borderRadius: 3, background: 'rgba(248,113,113,0.08)', color: '#f87171',
+                }}>
+                  Closed
                 </span>
               )}
             </div>

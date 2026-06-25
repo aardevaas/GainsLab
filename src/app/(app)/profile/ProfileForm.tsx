@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Upload } from 'lucide-react';
 import {
   feetInchesToCm,
   cmToFeetInches,
@@ -10,7 +10,7 @@ import {
   kgToLbs,
 } from '@/lib/calculators';
 import { useToast } from '@/components/ui/toast/ToastProvider';
-import { updateProfile, type ProfileInput } from './actions';
+import { updateProfile, uploadMemberAvatar, type ProfileInput } from './actions';
 
 type Units = 'metric' | 'imperial';
 type Sex = 'male' | 'female';
@@ -65,6 +65,9 @@ export function ProfileForm({ initial }: Props) {
   const router = useRouter();
   const toast = useToast();
   const [isPending, startTransition] = useTransition();
+  const [isUploadingAvatar, startUploadTransition] = useTransition();
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState(initial.name);
   const [username, setUsername] = useState(initial.username);
@@ -88,6 +91,20 @@ export function ProfileForm({ initial }: Props) {
 
   function handleWeightImperial(value: number) {
     setWeightKg(value > 0 ? lbsToKg(value) : null);
+  }
+
+  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarError(null);
+    const fd = new FormData();
+    fd.append('avatar', file);
+    startUploadTransition(async () => {
+      const res = await uploadMemberAvatar(fd);
+      if ('error' in res) { setAvatarError(res.error); return; }
+      setAvatarUrl(res.url);
+    });
+    e.target.value = '';
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -165,16 +182,55 @@ export function ProfileForm({ initial }: Props) {
           </div>
           <div className="sm:col-span-2">
             <label className={labelCls} style={{ color: 'var(--color-text-muted)' }}>
-              Avatar image URL <span style={{ color: 'var(--color-text-muted)' }}>(optional)</span>
+              Profile photo <span style={{ color: 'var(--color-text-muted)' }}>(optional)</span>
             </label>
-            <input
-              className={fieldCls}
-              style={fieldStyle()}
-              value={avatarUrl}
-              onChange={(e) => setAvatarUrl(e.target.value)}
-              placeholder="https://…"
-              type="url"
-            />
+            <div className="flex items-center gap-4">
+              <div
+                className="w-16 h-16 rounded-full flex-shrink-0 overflow-hidden"
+                style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}
+              >
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-xl" style={{ color: 'var(--color-text-muted)' }}>
+                      {name ? name[0]?.toUpperCase() : '?'}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="sr-only"
+                  onChange={handleAvatarChange}
+                />
+                <button
+                  type="button"
+                  disabled={isUploadingAvatar}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-2 px-4 h-9 rounded-lg text-xs font-semibold transition-opacity disabled:opacity-60"
+                  style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+                >
+                  {isUploadingAvatar ? (
+                    <Loader2 size={13} className="animate-spin" />
+                  ) : (
+                    <Upload size={13} />
+                  )}
+                  {isUploadingAvatar ? 'Uploading…' : 'Upload photo'}
+                </button>
+                <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                  JPG, PNG or WEBP · max 5 MB
+                </span>
+                {avatarError && (
+                  <span className="text-xs" style={{ color: 'var(--color-error, #ef4444)' }}>
+                    {avatarError}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </section>

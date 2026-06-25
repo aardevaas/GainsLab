@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { createNotification } from '@/lib/notifications';
 
 function generateSlug(fullName: string): string {
   return fullName
@@ -62,6 +63,7 @@ export async function approveCreator(applicationId: string, reviewNote?: string)
       experience_years: app.experience_years ?? null,
       community_price_bob: null,
       avg_client_rating: null,
+      is_verified: true,
     });
 
   if (profileError && profileError.code !== '23505') {
@@ -84,6 +86,14 @@ export async function approveCreator(applicationId: string, reviewNote?: string)
       .eq('user_id', app.user_id),
   ]);
 
+  await createNotification({
+    userId: app.user_id,
+    type: 'creator_approved',
+    title: 'Your creator application was approved!',
+    body: 'You are now a verified GainsLab creator. Head to your Studio to finish setting up your profile and programs.',
+    href: '/studio',
+  });
+
   revalidatePath('/admin/creators');
   return { ok: true };
 }
@@ -104,6 +114,24 @@ export async function rejectCreator(applicationId: string, reviewNote: string) {
     .eq('id', applicationId);
 
   if (error) return { error: error.message };
+
+  const { data: rejectedApp } = await supabase
+    .from('creator_applications')
+    .select('user_id')
+    .eq('id', applicationId)
+    .single();
+
+  if (rejectedApp) {
+    await createNotification({
+      userId: rejectedApp.user_id,
+      type: 'creator_rejected',
+      title: 'Creator application update',
+      body: reviewNote
+        ? `Your application wasn't approved: ${reviewNote}`
+        : 'Your creator application wasn\'t approved at this time. You\'re welcome to reapply.',
+      href: '/apply',
+    });
+  }
 
   revalidatePath('/admin/creators');
   return { ok: true };

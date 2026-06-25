@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { BookOpen, Bell } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ProgramViewClient } from './ProgramViewClient';
+import { RateCreatorCard } from './RateCreatorCard';
 import type { Metadata } from 'next';
 
 function isCheckinDue(frequency: string, lastAt: string | null): boolean {
@@ -24,11 +25,13 @@ export default async function MyProgramPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  // Prioritize active roster; fall back to most recent completed for rating prompt
   const { data: roster } = await supabase
     .from('client_roster')
     .select('id, program_id, start_date, creator_id, status')
     .eq('member_user_id', user.id)
-    .eq('status', 'active')
+    .in('status', ['active', 'completed'])
+    .order('status', { ascending: true }) // 'active' < 'completed' alphabetically
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -71,6 +74,24 @@ export default async function MyProgramPage() {
           Find a Coach
         </Link>
       </div>
+    );
+  }
+
+  // Show rating prompt for completed programs
+  if (roster.status === 'completed') {
+    const [creatorRes, ratingRes] = await Promise.all([
+      supabase.from('creator_profiles').select('display_name').eq('id', roster.creator_id).single(),
+      supabase.from('creator_ratings').select('rating, review_text').eq('roster_id', roster.id).maybeSingle(),
+    ]);
+
+    return (
+      <RateCreatorCard
+        rosterId={roster.id}
+        creatorId={roster.creator_id as string}
+        creatorName={creatorRes.data?.display_name ?? 'your coach'}
+        initialRating={ratingRes.data?.rating ?? null}
+        initialReview={ratingRes.data?.review_text ?? null}
+      />
     );
   }
 
@@ -138,7 +159,18 @@ export default async function MyProgramPage() {
         .select('id, week_id, day_number, title, rest_day')
         .in('week_id', weekIds)
         .order('day_number')
-    : { data: [] };
+    : { data: [] as { id: string; week_id: string; day_number: number; title: string | null; rest_day: boolean }[] };
+
+  const allDayIds = (days ?? []).map(d => d.id);
+  const { data: completionsRes } = allDayIds.length > 0
+    ? await supabase
+        .from('program_day_completions')
+        .select('day_id')
+        .eq('user_id', user.id)
+        .in('day_id', allDayIds)
+    : { data: [] as { day_id: string }[] };
+
+  const completedDayIds = (completionsRes ?? []).map(c => c.day_id);
 
   const tree = (weeksRes.data ?? []).map(w => ({
     ...w,
@@ -178,6 +210,7 @@ export default async function MyProgramPage() {
         program={programRes.data}
         creator={creatorRes.data ?? null}
         weeks={tree}
+        initialCompletedDayIds={completedDayIds}
       />
     </div>
   );

@@ -13,7 +13,7 @@ export default async function StudioSettingsPage() {
   const { data: profile } = await supabase
     .from('creator_profiles')
     .select(
-      'display_name, bio, avatar_url, specialty, instagram_url, youtube_url, tiktok_url, website_url, experience_years, country, city, community_price_bob, slug'
+      'display_name, bio, avatar_url, specialty, instagram_url, youtube_url, tiktok_url, website_url, experience_years, country, city, community_price_bob, slug, is_accepting_clients'
     )
     .eq('user_id', user.id)
     .single();
