@@ -1,9 +1,21 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Bell } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ProgramViewClient } from './ProgramViewClient';
 import type { Metadata } from 'next';
+
+function isCheckinDue(frequency: string, lastAt: string | null): boolean {
+  if (!lastAt) return true;
+  const diffDays = Math.floor((Date.now() - new Date(lastAt).getTime()) / 86_400_000);
+  switch (frequency) {
+    case 'daily':    return diffDays >= 1;
+    case 'weekly':   return diffDays >= 7;
+    case 'biweekly': return diffDays >= 14;
+    case 'monthly':  return diffDays >= 30;
+    default:         return false;
+  }
+}
 
 export const metadata: Metadata = { title: 'My Program' };
 
@@ -65,6 +77,29 @@ export default async function MyProgramPage() {
   const programId = roster.program_id as string;
   const creatorId = roster.creator_id as string;
 
+  // Resolve any due check-ins for this member
+  const { data: activeCheckins } = await supabase
+    .from('automated_checkins')
+    .select('id, title, frequency')
+    .eq('creator_id', creatorId)
+    .eq('is_active', true);
+
+  const dueCheckins: { id: string; title: string }[] = [];
+  for (const c of activeCheckins ?? []) {
+    const { data: last } = await supabase
+      .from('checkin_responses')
+      .select('submitted_at')
+      .eq('checkin_id', c.id)
+      .eq('member_user_id', user.id)
+      .order('submitted_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (isCheckinDue(c.frequency, last?.submitted_at ?? null)) {
+      dueCheckins.push({ id: c.id, title: c.title });
+    }
+  }
+
   const [programRes, creatorRes, weeksRes] = await Promise.all([
     supabase
       .from('programs')
@@ -112,6 +147,32 @@ export default async function MyProgramPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Pending check-in banner */}
+      {dueCheckins.length > 0 && (
+        <div style={{ padding: '12px 20px', background: 'rgba(96,165,250,0.06)', borderBottom: '1px solid rgba(96,165,250,0.15)' }}>
+          {dueCheckins.map(c => (
+            <Link key={c.id} href={`/my-program/checkin/${c.id}`} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 10,
+              padding: '8px 14px', borderRadius: 10, textDecoration: 'none',
+              background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.2)',
+            }}>
+              <Bell size={13} style={{ color: '#60a5fa' }} />
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#60a5fa' }}>
+                Check-in due: {c.title}
+              </span>
+              <span style={{
+                fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                letterSpacing: '0.06em', padding: '1px 6px', borderRadius: 4,
+                background: 'rgba(96,165,250,0.15)', color: '#60a5fa',
+                fontFamily: 'var(--font-mono)',
+              }}>
+                Fill out →
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
+
       <ProgramViewClient
         roster={{ id: roster.id, startDate: roster.start_date }}
         program={programRes.data}
