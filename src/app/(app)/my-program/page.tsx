@@ -63,12 +63,12 @@ export default async function MyProgramPage() {
             Check back soon or browse a creator to get started.
           </p>
         </div>
-        <Link href="/community" style={{
+        <Link href="/discover" style={{
           padding: '9px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700,
           background: 'var(--color-accent-subtle)', color: 'var(--color-accent)',
           textDecoration: 'none',
         }}>
-          Browse Community
+          Find a Coach
         </Link>
       </div>
     );
