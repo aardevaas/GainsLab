@@ -67,3 +67,19 @@ export async function rejectSubmission(submissionId: string, note: string): Prom
 
   revalidatePath('/admin/payments');
 }
+
+export async function flagSubmission(submissionId: string, note: string): Promise<void> {
+  const { supabase, adminId } = await requireAdmin();
+
+  await supabase
+    .from('payment_submissions')
+    .update({
+      status: 'flagged',
+      reviewed_by: adminId,
+      reviewed_at: new Date().toISOString(),
+      review_note: note || 'Flagged for further review.',
+    })
+    .eq('id', submissionId);
+
+  revalidatePath('/admin/payments');
+}
