@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Dumbbell, Users, ExternalLink, BadgeCheck, ClipboardCheck, Settings } from 'lucide-react';
+import { LayoutDashboard, Dumbbell, Users, ExternalLink, BadgeCheck, ClipboardCheck, Settings, Globe } from 'lucide-react';
 
 const NAV = [
   { label: 'Dashboard', href: '/studio', icon: LayoutDashboard, exact: true },
   { label: 'Programs', href: '/studio/programs', icon: Dumbbell, exact: false },
   { label: 'Clients', href: '/studio/clients', icon: Users, exact: false },
   { label: 'Check-ins', href: '/studio/checkins', icon: ClipboardCheck, exact: false },
+  { label: 'Community', href: '/studio/community', icon: Globe, exact: false },
   { label: 'Settings', href: '/studio/settings', icon: Settings, exact: false },
 ];
 
@@ -100,7 +101,7 @@ export function StudioNav({ displayName, slug, avatarUrl, isVerified }: Props) {
           );
         })}
         {/* Coming soon tabs */}
-        {(['Community', 'Revenue'] as const).map(l => (
+        {(['Revenue'] as const).map(l => (
           <span key={l} style={{
             display: 'flex', alignItems: 'center', gap: 6,
             padding: '8px 12px', fontSize: 13, fontWeight: 500,
