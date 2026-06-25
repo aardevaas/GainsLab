@@ -81,5 +81,9 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Pass current pathname to Server Components so the app layout can gate
+  // routes that require onboarding without an extra DB query in middleware.
+  supabaseResponse.headers.set('x-invoke-path', pathname);
+
   return supabaseResponse;
 }

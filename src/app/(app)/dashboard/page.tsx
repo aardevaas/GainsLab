@@ -13,6 +13,9 @@ import {
   Flame,
   HeartPulse,
   TrendingDown,
+  UserSearch,
+  Bell,
+  ClipboardCheck,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -67,7 +70,7 @@ export default async function DashboardPage() {
 
   const todayIso = new Date().toISOString().split("T")[0];
 
-  const [profileRes, dietRes, scores, todayLogRes, gains, bodyAgeRes] = await Promise.all([
+  const [profileRes, dietRes, scores, todayLogRes, gains, bodyAgeRes, rosterRes] = await Promise.all([
     supabase.from("profiles").select("*").eq("user_id", user.id).single(),
     supabase.from("dietary_profiles").select("*").eq("user_id", user.id).single(),
     syncMyScores(),
@@ -80,12 +83,78 @@ export default async function DashboardPage() {
       .order("date", { ascending: false })
       .limit(1)
       .single(),
+    supabase
+      .from("client_roster")
+      .select("id, program_id, creator_id, current_week, start_date")
+      .eq("member_user_id", user.id)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const profile = profileRes.data;
   const todayTotals = sumMacros((todayLogRes.data ?? []) as FoodLogEntry[]);
   const macroPreset = (dietRes.data?.macro_preset ?? "balanced") as MacroPreset;
   const bodyAge = bodyAgeRes.data ?? null;
+  const activeRoster = rosterRes.data ?? null;
+
+  // If there's an active coaching relationship, fetch creator + program + pending check-ins
+  let coachingData: {
+    creatorName: string;
+    creatorSlug: string;
+    creatorAvatar: string | null;
+    programTitle: string | null;
+    currentWeek: number;
+    pendingCheckins: { id: string; title: string }[];
+  } | null = null;
+
+  if (activeRoster) {
+    const [creatorRes2, programRes2, checkinsRes] = await Promise.all([
+      supabase
+        .from("creator_profiles")
+        .select("display_name, slug, avatar_url")
+        .eq("id", activeRoster.creator_id)
+        .single(),
+      activeRoster.program_id
+        ? supabase.from("programs").select("title").eq("id", activeRoster.program_id).single()
+        : Promise.resolve({ data: null }),
+      supabase
+        .from("automated_checkins")
+        .select("id, title, frequency")
+        .eq("creator_id", activeRoster.creator_id)
+        .eq("is_active", true),
+    ]);
+
+    const pendingCheckins: { id: string; title: string }[] = [];
+    for (const c of checkinsRes.data ?? []) {
+      const { data: last } = await supabase
+        .from("checkin_responses")
+        .select("submitted_at")
+        .eq("checkin_id", c.id)
+        .eq("member_user_id", user.id)
+        .order("submitted_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const diffDays = last?.submitted_at
+        ? Math.floor((Date.now() - new Date(last.submitted_at).getTime()) / 86_400_000)
+        : 999;
+      const dueDays: Record<string, number> = { daily: 1, weekly: 7, biweekly: 14, monthly: 30 };
+      if (diffDays >= (dueDays[c.frequency] ?? 999)) {
+        pendingCheckins.push({ id: c.id, title: c.title });
+      }
+    }
+
+    coachingData = {
+      creatorName: creatorRes2.data?.display_name ?? "Your Coach",
+      creatorSlug: creatorRes2.data?.slug ?? "",
+      creatorAvatar: creatorRes2.data?.avatar_url ?? null,
+      programTitle: programRes2.data?.title ?? null,
+      currentWeek: activeRoster.current_week,
+      pendingCheckins,
+    };
+  }
 
   const firstName = profile?.name?.split(" ")[0] ?? "there";
   const hour = new Date().getHours();
@@ -282,6 +351,109 @@ export default async function DashboardPage() {
             </>
           )}
         </div>
+
+        {/* ── COACHING CARD ── */}
+        {coachingData ? (
+          <div
+            className="rounded-2xl border p-5"
+            style={{ background: "var(--color-surface)", borderColor: "rgba(96,165,250,0.2)" }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--color-text-muted)" }}>
+                My Coach
+              </p>
+              <Link href="/my-program" className="text-xs font-semibold flex items-center gap-1" style={{ color: "#60a5fa" }}>
+                My Program <ArrowRight size={11} />
+              </Link>
+            </div>
+            <div className="flex items-center gap-4 flex-wrap">
+              {/* Coach avatar + name */}
+              <Link href={`/creator/${coachingData.creatorSlug}`} style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12 }}>
+                {coachingData.creatorAvatar ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={coachingData.creatorAvatar} alt={coachingData.creatorName}
+                    style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", border: "2px solid #60a5fa", flexShrink: 0 }}
+                  />
+                ) : (
+                  <div style={{
+                    width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
+                    background: "rgba(96,165,250,0.12)", border: "2px solid #60a5fa",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 16, fontWeight: 700, color: "#60a5fa",
+                  }}>
+                    {coachingData.creatorName[0].toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <p className="text-sm font-bold" style={{ color: "var(--color-text)", margin: 0 }}>
+                    {coachingData.creatorName}
+                  </p>
+                  {coachingData.programTitle && (
+                    <p className="text-xs" style={{ color: "var(--color-text-muted)", margin: 0 }}>
+                      {coachingData.programTitle} · Week {coachingData.currentWeek}
+                    </p>
+                  )}
+                </div>
+              </Link>
+
+              {/* Pending check-ins */}
+              {coachingData.pendingCheckins.length > 0 && (
+                <div className="flex flex-wrap gap-2 ml-auto">
+                  {coachingData.pendingCheckins.map(c => (
+                    <Link key={c.id} href={`/my-program/checkin/${c.id}`} style={{
+                      display: "inline-flex", alignItems: "center", gap: 6,
+                      padding: "6px 12px", borderRadius: 8, textDecoration: "none",
+                      background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.25)",
+                    }}>
+                      <Bell size={12} style={{ color: "#60a5fa" }} />
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "#60a5fa" }}>
+                        Check-in due
+                      </span>
+                      <span style={{
+                        fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em",
+                        padding: "1px 5px", borderRadius: 3, background: "rgba(96,165,250,0.15)", color: "#60a5fa",
+                      }}>
+                        {c.title}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+
+              {coachingData.pendingCheckins.length === 0 && (
+                <div className="ml-auto flex items-center gap-2" style={{ color: "#4ade80" }}>
+                  <ClipboardCheck size={14} />
+                  <span className="text-xs font-semibold">All check-ins up to date</span>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          /* Find a Coach CTA */
+          <Link href="/discover" style={{ textDecoration: "none" }}>
+            <div
+              className="rounded-2xl border p-5 flex items-center gap-4"
+              style={{ background: "var(--color-surface)", borderColor: "var(--color-border-subtle)", cursor: "pointer" }}
+            >
+              <div style={{
+                width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+                background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.2)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <UserSearch size={18} style={{ color: "var(--color-accent)" }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold" style={{ color: "var(--color-text)", margin: "0 0 2px" }}>
+                  Find a coach
+                </p>
+                <p className="text-xs" style={{ color: "var(--color-text-muted)", margin: 0 }}>
+                  Browse verified creators and request to join a coaching program.
+                </p>
+              </div>
+              <ArrowRight size={16} style={{ color: "var(--color-text-muted)", flexShrink: 0 }} />
+            </div>
+          </Link>
+        )}
 
         {/* Onboarding banner */}
         {!isProfileComplete && (

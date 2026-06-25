@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { approveSubmission, rejectSubmission } from './actions';
+import { approveSubmission, rejectSubmission, flagSubmission } from './actions';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = { title: 'Payment Review — Admin' };
@@ -42,7 +42,8 @@ export default async function AdminPaymentsPage() {
   const profileMap = new Map((profilesRes.data ?? []).map(p => [p.user_id, p.name ?? p.username ?? p.user_id.slice(0, 8)]));
 
   const pending = rows.filter(r => r.status === 'pending');
-  const reviewed = rows.filter(r => r.status !== 'pending');
+  const flagged = rows.filter(r => r.status === 'flagged');
+  const reviewed = rows.filter(r => r.status !== 'pending' && r.status !== 'flagged');
 
   return (
     <div className="max-w-4xl space-y-8">
@@ -51,7 +52,7 @@ export default async function AdminPaymentsPage() {
           Payment Submissions
         </h1>
         <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
-          {pending.length} pending · {rows.length} total
+          {pending.length} pending · {flagged.length} flagged · {rows.length} total
         </p>
       </div>
 
@@ -67,6 +68,23 @@ export default async function AdminPaymentsPage() {
             Pending Review
           </h2>
           {pending.map(row => (
+            <SubmissionCard
+              key={row.id}
+              row={row}
+              receiptUrl={urlMap.get(row.id) ?? null}
+              displayName={profileMap.get(row.user_id) ?? row.user_id.slice(0, 8)}
+            />
+          ))}
+        </section>
+      )}
+
+      {/* Flagged — needs manual decision */}
+      {flagged.length > 0 && (
+        <section className="space-y-4">
+          <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: '#fb923c' }}>
+            Flagged — Needs Decision
+          </h2>
+          {flagged.map(row => (
             <SubmissionCard
               key={row.id}
               row={row}
@@ -179,9 +197,9 @@ function SubmissionCard({
         <p className="text-xs italic" style={{ color: 'var(--color-text-muted)' }}>Note: {row.review_note}</p>
       )}
 
-      {/* Action buttons — only for pending */}
-      {!readOnly && row.status === 'pending' && (
-        <div className="flex gap-3 pt-2 border-t" style={{ borderColor: 'var(--color-border-subtle)' }}>
+      {/* Action buttons — pending and flagged */}
+      {!readOnly && (row.status === 'pending' || row.status === 'flagged') && (
+        <div className="flex flex-wrap gap-3 pt-2 border-t" style={{ borderColor: 'var(--color-border-subtle)' }}>
           <form action={approveSubmission.bind(null, row.id, 'Manually verified by admin')}>
             <button
               type="submit"
@@ -191,6 +209,17 @@ function SubmissionCard({
               Approve — Activate 30 days
             </button>
           </form>
+          {row.status === 'pending' && (
+            <form action={flagSubmission.bind(null, row.id, 'Needs further verification.')}>
+              <button
+                type="submit"
+                className="px-5 py-2 rounded-xl text-sm font-semibold border"
+                style={{ borderColor: '#fb923c', color: '#fb923c' }}
+              >
+                Flag
+              </button>
+            </form>
+          )}
           <form action={rejectSubmission.bind(null, row.id, 'Receipt could not be verified. Please resubmit.')}>
             <button
               type="submit"

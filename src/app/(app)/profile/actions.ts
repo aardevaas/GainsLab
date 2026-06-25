@@ -4,6 +4,9 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 
+const AVATAR_BUCKET = 'user-avatars';
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
 const ProfileSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(60, 'Name is too long'),
   username: z
@@ -78,4 +81,44 @@ export async function updateProfile(input: ProfileInput): Promise<ProfileActionR
   revalidatePath('/profile');
   revalidatePath('/dashboard');
   return { ok: true };
+}
+
+export async function uploadMemberAvatar(
+  formData: FormData,
+): Promise<{ url: string } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'Unauthorized' };
+
+  const file = formData.get('avatar') as File | null;
+  if (!file || file.size === 0) return { error: 'No file selected.' };
+  if (file.size > 5 * 1024 * 1024) return { error: 'Image must be under 5 MB.' };
+  if (!ALLOWED_TYPES.includes(file.type)) return { error: 'Upload a JPG, PNG, or WEBP image.' };
+
+  const ext = file.type === 'image/webp' ? 'webp' : file.type === 'image/png' ? 'png' : 'jpg';
+  const storagePath = `${user.id}/${Date.now()}.${ext}`;
+
+  const { error: uploadErr } = await supabase.storage
+    .from(AVATAR_BUCKET)
+    .upload(storagePath, file, { contentType: file.type, upsert: false });
+
+  if (uploadErr) return { error: 'Upload failed. Please try again.' };
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(storagePath);
+
+  const { error: dbErr } = await supabase
+    .from('profiles')
+    .update({ avatar_url: publicUrl })
+    .eq('user_id', user.id);
+
+  if (dbErr) return { error: dbErr.message };
+
+  revalidatePath('/profile');
+  revalidatePath('/dashboard');
+
+  return { url: publicUrl };
 }
