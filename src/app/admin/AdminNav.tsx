@@ -15,6 +15,7 @@ export function AdminNav({ pendingPayments, pendingCreators }: Props) {
     { label: 'Overview', href: '/admin', exact: true, badge: 0 },
     { label: 'Creators', href: '/admin/creators', exact: false, badge: pendingCreators },
     { label: 'Payments', href: '/admin/payments', exact: false, badge: pendingPayments },
+    { label: 'Users', href: '/admin/users', exact: false, badge: 0 },
   ];
 
   return (

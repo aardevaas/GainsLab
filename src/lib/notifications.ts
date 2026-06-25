@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 type CreateNotificationParams = {
   userId: string;
@@ -11,7 +11,7 @@ type CreateNotificationParams = {
 };
 
 export async function createNotification(params: CreateNotificationParams) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   await supabase.from('notifications').insert({
     user_id: params.userId,
     type: params.type,

@@ -255,7 +255,7 @@ export function WorkoutDayBuilder({ days }: Props) {
                     max={10}
                     value={sets}
                     onChange={e => setSets(Number(e.target.value))}
-                    className="w-16 px-2 py-1.5 rounded-lg border text-sm text-center outline-none"
+                    className="w-16 px-2 py-1.5 rounded-lg border text-sm text-center outline-none focus:border-[var(--color-accent)]"
                     style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
                   />
                   <label className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Reps</label>
@@ -266,7 +266,7 @@ export function WorkoutDayBuilder({ days }: Props) {
                     value={reps ?? ''}
                     placeholder="—"
                     onChange={e => setReps(e.target.value ? Number(e.target.value) : null)}
-                    className="w-16 px-2 py-1.5 rounded-lg border text-sm text-center outline-none"
+                    className="w-16 px-2 py-1.5 rounded-lg border text-sm text-center outline-none focus:border-[var(--color-accent)]"
                     style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
                   />
                 </div>

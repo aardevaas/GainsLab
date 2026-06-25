@@ -1,9 +1,25 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { MapPin, Star, Users, TrendingUp, Zap } from 'lucide-react';
+import { MapPin, Star, Users, TrendingUp, Zap, Search } from 'lucide-react';
 import type { Metadata } from 'next';
 
-export const metadata: Metadata = { title: 'Find a Coach — GainsLab' };
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://gainslab.app';
+
+export const metadata: Metadata = {
+  title: 'Find a Coach',
+  description: 'Browse verified fitness coaches on GainsLab. Filter by specialty — fat loss, muscle gain, powerlifting, nutrition, and more.',
+  openGraph: {
+    title: 'Find a Coach — GainsLab',
+    description: 'Browse verified fitness coaches on GainsLab. Filter by specialty — fat loss, muscle gain, powerlifting, nutrition, and more.',
+    url: `${APP_URL}/discover`,
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Find a Coach — GainsLab',
+    description: 'Browse verified fitness coaches on GainsLab.',
+  },
+};
 
 const SPECIALTIES = [
   { key: 'fat_loss', label: 'Fat Loss' },
@@ -22,11 +38,11 @@ const SPECIALTIES = [
 ];
 
 type Props = {
-  searchParams: Promise<{ specialty?: string }>;
+  searchParams: Promise<{ specialty?: string; q?: string }>;
 };
 
 export default async function DiscoverPage({ searchParams }: Props) {
-  const { specialty } = await searchParams;
+  const { specialty, q } = await searchParams;
   const supabase = await createClient();
 
   let query = supabase
@@ -38,6 +54,10 @@ export default async function DiscoverPage({ searchParams }: Props) {
 
   if (specialty) {
     query = query.contains('specialty', [specialty]);
+  }
+
+  if (q) {
+    query = query.or(`display_name.ilike.%${q}%,bio.ilike.%${q}%,city.ilike.%${q}%`);
   }
 
   const { data: creators } = await query;
@@ -55,6 +75,38 @@ export default async function DiscoverPage({ searchParams }: Props) {
       </div>
 
       <div className="flex-1 overflow-y-auto px-8 py-6">
+        {/* Search bar */}
+        <form method="GET" action="/discover" style={{ marginBottom: 16 }}>
+          {specialty && <input type="hidden" name="specialty" value={specialty} />}
+          <div style={{ position: 'relative', maxWidth: 400 }}>
+            <Search size={14} style={{
+              position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+              color: 'var(--color-text-muted)', pointerEvents: 'none',
+            }} />
+            <input
+              name="q"
+              defaultValue={q ?? ''}
+              placeholder="Search coaches by name, city…"
+              style={{
+                width: '100%', height: 38, paddingLeft: 36, paddingRight: q ? 36 : 12,
+                borderRadius: 10, border: '1px solid var(--color-border)',
+                background: 'var(--color-surface)', color: 'var(--color-text)',
+                fontSize: 13, outline: 'none', boxSizing: 'border-box',
+              }}
+            />
+            {q && (
+              <Link
+                href={specialty ? `/discover?specialty=${specialty}` : '/discover'}
+                style={{
+                  position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                  fontSize: 11, color: 'var(--color-text-muted)', textDecoration: 'none', lineHeight: 1,
+                }}
+                aria-label="Clear search"
+              >✕</Link>
+            )}
+          </div>
+        </form>
+
         {/* Specialty filter chips */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 24 }}>
           <Link
@@ -99,22 +151,26 @@ export default async function DiscoverPage({ searchParams }: Props) {
               No coaches found
             </p>
             <p style={{ fontSize: 13, color: 'var(--color-text-muted)', margin: 0 }}>
-              {specialty ? 'Try a different specialty or browse all.' : 'Be the first — apply to become a creator.'}
+              {q
+                ? `No results for "${q}". Try a different search.`
+                : specialty
+                  ? 'Try a different specialty or browse all.'
+                  : 'Be the first — apply to become a creator.'}
             </p>
-            {specialty && (
+            {(specialty || q) && (
               <Link href="/discover" style={{
                 fontSize: 13, fontWeight: 700, padding: '8px 18px', borderRadius: 8,
                 background: 'var(--color-surface)', border: '1px solid var(--color-border)',
                 color: 'var(--color-text-secondary)', textDecoration: 'none',
               }}>
-                Clear filter
+                Clear all filters
               </Link>
             )}
           </div>
         ) : (
           <div style={{
             display: 'grid', gap: 16,
-            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))',
           }}>
             {list.map(c => (
               <CreatorCard key={c.id} creator={c} />
@@ -168,7 +224,7 @@ function CreatorCard({ creator: c }: { creator: Creator }) {
           <div style={{ position: 'relative', flexShrink: 0 }}>
             {c.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={c.avatar_url} alt={c.display_name}
+              <img src={c.avatar_url} alt={c.display_name} loading="lazy" decoding="async"
                 style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--color-accent)' }}
               />
             ) : (

@@ -212,7 +212,7 @@ function PhotoThumb({
       }}
       onClick={onSelect}
     >
-      <img src={photo.signedUrl} alt={formatDate(photo.date)} className="w-full h-full object-cover" />
+      <img src={photo.signedUrl} alt={formatDate(photo.date)} loading="lazy" decoding="async" className="w-full h-full object-cover" />
 
       {/* Date label */}
       <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5" style={{ background: 'linear-gradient(transparent,rgba(0,0,0,0.7))' }}>

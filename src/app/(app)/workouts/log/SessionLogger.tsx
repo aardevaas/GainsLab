@@ -257,7 +257,7 @@ export function SessionLogger({ planId, days, history }: Props) {
                       step={1.25}
                       value={s.weightKg}
                       onChange={(e) => patchSet(ex.id, i, { weightKg: Number(e.target.value) })}
-                      className="w-full px-2 py-1 rounded-lg border text-sm text-center outline-none"
+                      className="w-full px-2 py-1 rounded-lg border text-sm text-center outline-none focus:border-[var(--color-accent)]"
                       style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
                     />
                     <input
@@ -265,7 +265,7 @@ export function SessionLogger({ planId, days, history }: Props) {
                       min={0}
                       value={s.reps}
                       onChange={(e) => patchSet(ex.id, i, { reps: Number(e.target.value) })}
-                      className="w-full px-2 py-1 rounded-lg border text-sm text-center outline-none"
+                      className="w-full px-2 py-1 rounded-lg border text-sm text-center outline-none focus:border-[var(--color-accent)]"
                       style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
                     />
                     <input
@@ -278,7 +278,7 @@ export function SessionLogger({ planId, days, history }: Props) {
                       onChange={(e) =>
                         patchSet(ex.id, i, { rpe: e.target.value === '' ? null : Number(e.target.value) })
                       }
-                      className="w-full px-1.5 py-1 rounded-lg border text-xs text-center outline-none"
+                      className="w-full px-1.5 py-1 rounded-lg border text-xs text-center outline-none focus:border-[var(--color-accent)]"
                       style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
                     />
 
