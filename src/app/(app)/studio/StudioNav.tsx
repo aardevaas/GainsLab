@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Dumbbell, Users, ExternalLink, BadgeCheck, ClipboardCheck, Settings, Globe } from 'lucide-react';
+import { LayoutDashboard, Dumbbell, Users, ExternalLink, BadgeCheck, ClipboardCheck, Settings, Globe, TrendingUp } from 'lucide-react';
 
 const NAV = [
   { label: 'Dashboard', href: '/studio', icon: LayoutDashboard, exact: true },
@@ -10,6 +10,7 @@ const NAV = [
   { label: 'Clients', href: '/studio/clients', icon: Users, exact: false },
   { label: 'Check-ins', href: '/studio/checkins', icon: ClipboardCheck, exact: false },
   { label: 'Community', href: '/studio/community', icon: Globe, exact: false },
+  { label: 'Revenue', href: '/studio/revenue', icon: TrendingUp, exact: false },
   { label: 'Settings', href: '/studio/settings', icon: Settings, exact: false },
 ];
 
@@ -100,23 +101,6 @@ export function StudioNav({ displayName, slug, avatarUrl, isVerified }: Props) {
             </Link>
           );
         })}
-        {/* Coming soon tabs */}
-        {(['Revenue'] as const).map(l => (
-          <span key={l} style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '8px 12px', fontSize: 13, fontWeight: 500,
-            color: 'var(--color-text-muted)', opacity: 0.5,
-            borderBottom: '2px solid transparent',
-            cursor: 'default',
-          }}>
-            {l}
-            <span style={{
-              fontSize: 9, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase',
-              background: 'rgba(96,165,250,0.1)', color: '#60a5fa',
-              padding: '1px 5px', borderRadius: 3,
-            }}>Soon</span>
-          </span>
-        ))}
       </div>
     </div>
   );
