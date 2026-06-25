@@ -6,6 +6,7 @@ import {
   Star, Shield, Users, TrendingUp, Trophy, Clock,
   ChevronRight, Lock, Zap,
 } from 'lucide-react';
+import { JoinRequestButton } from './JoinRequestButton';
 import type { Metadata } from 'next';
 
 const SPECIALTY_LABELS: Record<string, string> = {
@@ -49,17 +50,19 @@ export default async function CreatorProfilePage({ params }: { params: Promise<{
   if (!creator) notFound();
   const user = authRes.data.user;
 
-  const [programsRes, communityRes, memberRes] = await Promise.all([
+  const [programsRes, communityRes, rosterRes] = await Promise.all([
     supabase.from('programs').select('*').eq('creator_id', creator.id).eq('is_published', true).order('created_at'),
     supabase.from('creator_communities').select('*').eq('creator_id', creator.id).maybeSingle(),
     user
-      ? supabase.from('client_roster').select('id').eq('creator_id', creator.id).eq('member_user_id', user.id).eq('status', 'active').maybeSingle()
+      ? supabase.from('client_roster').select('id, status, notes').eq('creator_id', creator.id).eq('member_user_id', user.id).maybeSingle()
       : Promise.resolve({ data: null }),
   ]);
 
   const programs = programsRes.data ?? [];
   const community = communityRes.data;
-  const isMember = !!memberRes.data;
+  const rosterEntry = rosterRes.data;
+  const isMember = rosterEntry?.status === 'active';
+  const isRequested = rosterEntry?.notes === '__join_request__' && rosterEntry?.status === 'paused';
 
   const coverStyle = creator.cover_url
     ? { backgroundImage: `url(${creator.cover_url})`, backgroundSize: 'cover' as const, backgroundPosition: 'center' }
@@ -194,25 +197,30 @@ export default async function CreatorProfilePage({ params }: { params: Promise<{
                 }}>
                   Go to Dashboard <ChevronRight size={14} />
                 </Link>
+              ) : user ? (
+                <JoinRequestButton
+                  creatorId={creator.id}
+                  communityPriceBob={creator.community_price_bob}
+                  initialRequested={isRequested}
+                />
               ) : (
                 <>
-                  <Link href={user ? '/subscribe' : '/signup'} style={{
+                  <Link href="/signup" style={{
                     padding: '10px 22px', borderRadius: 10, fontSize: 13, fontWeight: 700,
                     background: 'var(--color-accent)', color: '#0a0c0f',
                     display: 'flex', alignItems: 'center', gap: 6,
                     boxShadow: '0 4px 16px rgba(74,222,128,0.25)',
+                    textDecoration: 'none',
                   }}>
-                    <Zap size={14} />
                     {creator.community_price_bob ? `Join · Bs. ${creator.community_price_bob}/mo` : 'Join'}
                   </Link>
-                  {!user && (
-                    <Link href="/login" style={{
-                      padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 500,
-                      border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)',
-                    }}>
-                      Sign in
-                    </Link>
-                  )}
+                  <Link href="/login" style={{
+                    padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 500,
+                    border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)',
+                    textDecoration: 'none',
+                  }}>
+                    Sign in
+                  </Link>
                 </>
               )}
             </div>

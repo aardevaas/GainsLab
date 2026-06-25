@@ -1,8 +1,8 @@
 'use client';
 
 import { useActionState, useState } from 'react';
-import { assignClient, type ClientState } from './actions';
-import { Plus, X, Loader2, Check, Users } from 'lucide-react';
+import { assignClient, approveJoinRequest, declineJoinRequest, type ClientState } from './actions';
+import { Plus, X, Loader2, Check, Users, UserCheck, UserX } from 'lucide-react';
 
 type Program = { id: string; title: string; type: string };
 
@@ -13,6 +13,7 @@ type Client = {
   current_week: number;
   start_date: string;
   program_id: string | null;
+  notes: string | null;
 };
 
 const STATUS_COLOR: Record<string, string> = {
@@ -34,13 +35,20 @@ const labelStyle: React.CSSProperties = {
   letterSpacing: '0.05em', display: 'block', marginBottom: 5,
 };
 
-type Props = { clients: Client[]; programs: Program[] };
+type Props = { clients: Client[]; programs: Program[]; profileMap: Record<string, string> };
 
-export function ClientsClient({ clients, programs }: Props) {
+export function ClientsClient({ clients, programs, profileMap }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [state, action, pending] = useActionState<ClientState, FormData>(assignClient, {});
 
   if (state.success && showForm) setShowForm(false);
+
+  const joinRequests = clients.filter(c => c.notes === '__join_request__' && c.status === 'paused');
+  const activeClients = clients.filter(c => !(c.notes === '__join_request__' && c.status === 'paused'));
+
+  function displayName(userId: string) {
+    return profileMap[userId] ?? userId.slice(0, 8);
+  }
 
   return (
     <div>
@@ -51,8 +59,13 @@ export function ClientsClient({ clients, programs }: Props) {
             Clients
           </h1>
           <p style={{ fontSize: 13, color: 'var(--color-text-muted)', margin: 0 }}>
-            {clients.filter(c => c.status === 'active').length} active ·{' '}
-            {clients.length} total on roster
+            {activeClients.filter(c => c.status === 'active').length} active ·{' '}
+            {activeClients.length} total
+            {joinRequests.length > 0 && (
+              <> · <span style={{ color: '#fbbf24', fontWeight: 700 }}>
+                {joinRequests.length} pending request{joinRequests.length !== 1 ? 's' : ''}
+              </span></>
+            )}
           </p>
         </div>
         <button
@@ -140,8 +153,67 @@ export function ClientsClient({ clients, programs }: Props) {
         </div>
       )}
 
-      {/* Clients table */}
-      {clients.length === 0 ? (
+      {/* ── JOIN REQUESTS ── */}
+      {joinRequests.length > 0 && (
+        <div style={{ marginBottom: 24 }}>
+          <p style={{
+            fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
+            color: '#fbbf24', fontFamily: 'var(--font-mono)', margin: '0 0 10px',
+          }}>
+            Pending Join Requests — {joinRequests.length}
+          </p>
+          <div style={{ border: '1px solid rgba(251,191,36,0.2)', borderRadius: 14, overflow: 'hidden', background: 'rgba(251,191,36,0.03)' }}>
+            {joinRequests.map((c, i) => (
+              <div key={c.id} style={{
+                display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px',
+                borderBottom: i < joinRequests.length - 1 ? '1px solid rgba(251,191,36,0.12)' : 'none',
+              }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                  background: 'rgba(251,191,36,0.1)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 12, fontWeight: 700, color: '#fbbf24',
+                }}>
+                  {displayName(c.member_user_id).slice(0, 2).toUpperCase()}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', margin: '0 0 2px' }}>
+                    @{displayName(c.member_user_id)}
+                  </p>
+                  <p style={{ fontSize: 11, color: 'var(--color-text-muted)', margin: 0 }}>
+                    Requested {new Date(c.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                  <form action={approveJoinRequest.bind(null, c.id)}>
+                    <button type="submit" style={{
+                      display: 'flex', alignItems: 'center', gap: 5,
+                      padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                      background: 'rgba(74,222,128,0.12)', color: '#4ade80',
+                      border: '1px solid rgba(74,222,128,0.3)', cursor: 'pointer',
+                    }}>
+                      <UserCheck size={12} /> Approve
+                    </button>
+                  </form>
+                  <form action={declineJoinRequest.bind(null, c.id)}>
+                    <button type="submit" style={{
+                      display: 'flex', alignItems: 'center', gap: 5,
+                      padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                      background: 'rgba(248,113,113,0.08)', color: '#f87171',
+                      border: '1px solid rgba(248,113,113,0.2)', cursor: 'pointer',
+                    }}>
+                      <UserX size={12} /> Decline
+                    </button>
+                  </form>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── ROSTER TABLE ── */}
+      {activeClients.length === 0 ? (
         <div style={{
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
           minHeight: 300, gap: 14, textAlign: 'center',
@@ -153,13 +225,12 @@ export function ClientsClient({ clients, programs }: Props) {
           <div>
             <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)', margin: '0 0 5px' }}>No clients yet</h3>
             <p style={{ fontSize: 12, color: 'var(--color-text-muted)', margin: 0, maxWidth: 280 }}>
-              Add your first client above. They'll receive a notification and find the program on their dashboard.
+              Add your first client above, or share your profile so members can request to join.
             </p>
           </div>
         </div>
       ) : (
         <div style={{ border: '1px solid var(--color-border-subtle)', borderRadius: 14, overflow: 'hidden' }}>
-          {/* Table head */}
           <div style={{
             display: 'grid', gridTemplateColumns: '2fr 1.5fr 100px 100px 80px',
             padding: '10px 20px',
@@ -172,17 +243,17 @@ export function ClientsClient({ clients, programs }: Props) {
               </span>
             ))}
           </div>
-          {clients.map((c, i) => {
+          {activeClients.map((c, i) => {
             const prog = programs.find(p => p.id === c.program_id);
             const color = STATUS_COLOR[c.status] ?? 'var(--color-text-muted)';
+            const name = displayName(c.member_user_id);
             return (
               <div key={c.id} style={{
                 display: 'grid', gridTemplateColumns: '2fr 1.5fr 100px 100px 80px',
                 padding: '14px 20px', alignItems: 'center',
-                borderBottom: i < clients.length - 1 ? '1px solid var(--color-border-subtle)' : 'none',
+                borderBottom: i < activeClients.length - 1 ? '1px solid var(--color-border-subtle)' : 'none',
                 background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)',
               }}>
-                {/* Client ID */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{
                     width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
@@ -190,22 +261,15 @@ export function ClientsClient({ clients, programs }: Props) {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 11, fontWeight: 700, color: '#60a5fa',
                   }}>
-                    {c.member_user_id.slice(0, 2).toUpperCase()}
+                    {name.slice(0, 2).toUpperCase()}
                   </div>
-                  <div>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', margin: 0 }}>
-                      Client
-                    </p>
-                    <p style={{ fontSize: 11, color: 'var(--color-text-muted)', margin: 0 }}>
-                      {c.member_user_id.slice(0, 8)}…
-                    </p>
-                  </div>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', margin: 0 }}>
+                    @{name}
+                  </p>
                 </div>
-                {/* Program */}
                 <span style={{ fontSize: 12, color: prog ? 'var(--color-text)' : 'var(--color-text-muted)' }}>
                   {prog?.title ?? '—'}
                 </span>
-                {/* Status */}
                 <div style={{
                   display: 'inline-flex', alignItems: 'center', gap: 4,
                   fontSize: 10, fontWeight: 700, textTransform: 'capitalize',
@@ -214,11 +278,9 @@ export function ClientsClient({ clients, programs }: Props) {
                   <span style={{ width: 5, height: 5, borderRadius: '50%', background: color, flexShrink: 0 }} />
                   {c.status}
                 </div>
-                {/* Week */}
                 <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
                   Week {c.current_week}
                 </span>
-                {/* Date */}
                 <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
                   {new Date(c.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </span>

@@ -22,6 +22,7 @@ import {
   Star,
   Sparkles,
   ClipboardList,
+  UserSearch,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -55,6 +56,7 @@ const NAV: NavSection[] = [
   {
     label: "Explore",
     items: [
+      { label: "Coaches", href: "/discover", icon: UserSearch },
       { label: "Exercises", href: "/exercises", icon: Zap },
       { label: "Recipes", href: "/recipes", icon: ChefHat },
       { label: "Grocery", href: "/grocery", icon: ShoppingCart },

@@ -71,3 +71,37 @@ export async function updateClientStatus(
 
   revalidatePath('/studio/clients');
 }
+
+export async function approveJoinRequest(clientId: string): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { data: creator } = await supabase
+    .from('creator_profiles').select('id').eq('user_id', user.id).maybeSingle();
+  if (!creator) return;
+
+  await supabase.from('client_roster')
+    .update({ status: 'active', notes: null, start_date: new Date().toISOString().slice(0, 10) })
+    .eq('id', clientId)
+    .eq('creator_id', creator.id);
+
+  revalidatePath('/studio/clients');
+}
+
+export async function declineJoinRequest(clientId: string): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { data: creator } = await supabase
+    .from('creator_profiles').select('id').eq('user_id', user.id).maybeSingle();
+  if (!creator) return;
+
+  await supabase.from('client_roster')
+    .delete()
+    .eq('id', clientId)
+    .eq('creator_id', creator.id);
+
+  revalidatePath('/studio/clients');
+}
