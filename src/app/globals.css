@@ -1,33 +1,60 @@
 @import "tailwindcss";
 
 :root {
-  /* ── Palette ── */
-  --color-bg: #0a0c0f;
-  --color-bg-secondary: #0f1217;
-  --color-surface: #141820;
-  --color-surface-elevated: #1a2030;
-  --color-border: #252d3d;
-  --color-border-subtle: #1e2535;
+  /* ── Brand Palette ── */
+  --color-brand-orange: #FF8000;
+  --color-brand-blue: #47C7FC;
+  --color-brand-purple: #4D47FC;
+  --color-brand-green: #A1FC0F;
+  --color-brand-grey: #B6CBDB;
 
-  /* Brand — electric green */
-  --color-accent: #4ade80;
-  --color-accent-dim: #22c55e;
-  --color-accent-subtle: rgba(74, 222, 128, 0.1);
-  --color-accent-glow: rgba(74, 222, 128, 0.2);
+  /* ── Dark mode (default) ── */
+  --color-bg: #090D15;
+  --color-bg-secondary: #0D1420;
+  --color-bg-blur: rgba(9, 13, 21, 0.85);
 
-  /* Text */
-  --color-text: #f0f4f8;
-  --color-text-secondary: #8a9ab5;
-  --color-text-muted: #4a5568;
+  --color-surface: #111827;
+  --color-surface-elevated: #162033;
 
-  /* Semantic */
-  --color-success: #4ade80;
+  --color-border: #1E2D47;
+  --color-border-subtle: #16243A;
+
+  /* Primary accent — Papaya Orange */
+  --color-accent: #FF8000;
+  --color-accent-dim: #CC6600;
+  --color-accent-subtle: rgba(255, 128, 0, 0.10);
+  --color-accent-glow: rgba(255, 128, 0, 0.20);
+  --color-accent-border: rgba(255, 128, 0, 0.25);
+  --color-accent-hero: rgba(255, 128, 0, 0.12);
+  --color-accent-cta: rgba(255, 128, 0, 0.06);
+
+  /* Secondary — Gulf Light Blue */
+  --color-secondary: #47C7FC;
+  --color-secondary-subtle: rgba(71, 199, 252, 0.10);
+  --color-secondary-glow: rgba(71, 199, 252, 0.20);
+
+  /* Tertiary — Purple */
+  --color-tertiary: #4D47FC;
+  --color-tertiary-subtle: rgba(77, 71, 252, 0.10);
+  --color-tertiary-glow: rgba(77, 71, 252, 0.20);
+
+  /* Success — Electric Green */
+  --color-success: #A1FC0F;
+  --color-success-subtle: rgba(161, 252, 15, 0.10);
+
+  /* Semantic status */
   --color-warning: #fbbf24;
   --color-danger: #f87171;
-  --color-info: #60a5fa;
+  --color-info: #47C7FC;
+
+  /* Text */
+  --color-text: #EFF4FF;
+  --color-text-secondary: #8DA4C2;
+  --color-text-muted: #4A6080;
 
   /* ── Typography ── */
-  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-display: var(--font-space-grotesk), "Space Grotesk", system-ui, sans-serif;
+  --font-sans: var(--font-jakarta-sans), "Plus Jakarta Sans", system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), "Courier New", monospace;
 
   /* ── Motion ── */
@@ -49,8 +76,52 @@
   --sidebar-width: 240px;
 }
 
+/* ── Light mode ── */
+[data-theme="light"] {
+  --color-bg: #F8FAFD;
+  --color-bg-secondary: #F0F4FA;
+  --color-bg-blur: rgba(248, 250, 253, 0.85);
+
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #F4F7FC;
+
+  --color-border: #D4E0F0;
+  --color-border-subtle: #E4EDF8;
+
+  --color-text: #0A0F1E;
+  --color-text-secondary: #4A6080;
+  --color-text-muted: #8DA4C2;
+
+  --color-accent-glow: rgba(255, 128, 0, 0.12);
+  --color-accent-hero: rgba(255, 128, 0, 0.08);
+  --color-accent-cta: rgba(255, 128, 0, 0.04);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --color-bg: #F8FAFD;
+    --color-bg-secondary: #F0F4FA;
+    --color-bg-blur: rgba(248, 250, 253, 0.85);
+
+    --color-surface: #FFFFFF;
+    --color-surface-elevated: #F4F7FC;
+
+    --color-border: #D4E0F0;
+    --color-border-subtle: #E4EDF8;
+
+    --color-text: #0A0F1E;
+    --color-text-secondary: #4A6080;
+    --color-text-muted: #8DA4C2;
+
+    --color-accent-glow: rgba(255, 128, 0, 0.12);
+    --color-accent-hero: rgba(255, 128, 0, 0.08);
+    --color-accent-cta: rgba(255, 128, 0, 0.04);
+  }
+}
+
 @theme inline {
-  --font-sans: var(--font-geist-sans);
+  --font-display: var(--font-space-grotesk);
+  --font-sans: var(--font-jakarta-sans);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -71,6 +142,10 @@ body {
   font-family: var(--font-sans);
   line-height: 1.6;
   min-height: 100dvh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
 }
 
 /* ── Scrollbar ── */
@@ -98,9 +173,31 @@ body {
 a { color: inherit; text-decoration: none; }
 img, video { max-width: 100%; display: block; }
 
-/* ── Interactive card ── */
-/* Built on transform + box-shadow (not border/background) so it never
-   conflicts with the inline `style` colors used across the app. */
+/* ── Nav link hover — replaces inline onMouseEnter/onMouseLeave ── */
+.nav-link {
+  color: var(--color-text-secondary);
+  transition: color var(--duration-fast) var(--ease-out-expo);
+}
+.nav-link:hover {
+  color: var(--color-text);
+}
+
+/* ── Feature card hover — replaces inline onMouseEnter/onMouseLeave ── */
+.feature-card {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  transition:
+    border-color var(--duration-normal) var(--ease-out-expo),
+    background var(--duration-normal) var(--ease-out-expo),
+    box-shadow var(--duration-normal) var(--ease-out-expo);
+}
+.feature-card:hover {
+  border-color: var(--color-accent);
+  background: var(--color-surface-elevated);
+  box-shadow: 0 0 24px var(--color-accent-glow);
+}
+
+/* ── Interactive card — lift + glow on hover ── */
 .card-interactive {
   transition:
     transform var(--duration-normal) var(--ease-out-expo),
@@ -118,7 +215,7 @@ img, video { max-width: 100%; display: block; }
   transform: translateY(-1px);
 }
 
-/* Accent-glow variant for primary surfaces — stronger halo */
+/* Stronger halo variant for primary surfaces */
 .card-interactive-glow:hover {
   box-shadow:
     0 14px 36px -8px rgba(0, 0, 0, 0.6),
@@ -128,22 +225,31 @@ img, video { max-width: 100%; display: block; }
 
 /* ── Entrance animation ── */
 @keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Creator type marquee (landing hero) ── */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee 28s linear infinite;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+    flex-wrap: wrap;
+    width: auto !important;
   }
 }
 
 /* ── Exercise range-of-motion auto-scrub ──
-   Crossfades the end frame over the held start frame to mimic the motion.
-   Plays ONLY on hover/focus of its card (`.rom-media`) — never globally in
-   sync — or when explicitly auto-playing on a detail page (`.rom-autoplay`).
-   Pure CSS (compositor-friendly opacity only, no JS timers); the global
-   reduced-motion block below neutralizes it, leaving the start frame. */
+   Crossfades the end frame over the held start frame to mimic motion.
+   Plays ONLY on hover/focus of its card (.rom-media) or auto-play (.rom-autoplay).
+   Pure CSS, compositor-friendly opacity only; reduced-motion block neutralizes it. */
 @keyframes rom-scrub {
   0%, 30% { opacity: 0; }
   50%, 80% { opacity: 1; }
@@ -157,6 +263,76 @@ img, video { max-width: 100%; display: block; }
 .rom-media:focus-within .rom-scrub-end,
 .rom-autoplay .rom-scrub-end {
   animation: rom-scrub 2.4s ease-in-out infinite;
+}
+
+/* ── PWA / Mobile Foundation ── */
+/* Safe area insets for iPhone notch and Dynamic Island */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+}
+
+/* Utility classes for safe area awareness */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+.pl-safe { padding-left: env(safe-area-inset-left, 0px); }
+.pr-safe { padding-right: env(safe-area-inset-right, 0px); }
+
+/* Touch target minimum (WCAG 2.5.5) */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Prevent tap highlight on interactive elements */
+button, a, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Article prose — TipTap-rendered education hub content ── */
+.article-prose .tiptap {
+  outline: none;
+}
+.article-prose h2 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+  margin: 1.75rem 0 0.75rem;
+}
+.article-prose h2:first-child {
+  margin-top: 0;
+}
+.article-prose p {
+  font-size: 0.875rem;
+  line-height: 1.75;
+  color: var(--color-text-secondary);
+  margin: 0 0 1rem;
+}
+.article-prose ul, .article-prose ol {
+  margin: 0 0 1rem;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.article-prose li {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+.article-prose strong {
+  color: var(--color-text);
+  font-weight: 700;
+}
+.article-prose blockquote {
+  border-left: 2px solid var(--color-accent);
+  padding-left: 0.875rem;
+  margin: 0 0 1rem;
+  color: var(--color-text-muted);
+  font-style: italic;
 }
 
 /* ── Reduced motion ── */

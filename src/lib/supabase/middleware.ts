@@ -1,8 +1,10 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { Database } from '@/types/database';
+import { routing } from '@/i18n/routing';
 
-// Routes anyone can visit without an account
+// Routes anyone can visit without an account (locale-stripped, e.g. "/learn"
+// matches both "/es/learn" and "/en/learn")
 const PUBLIC_PREFIXES = [
   '/',
   '/login',
@@ -36,9 +38,21 @@ function requiresAuth(pathname: string): boolean {
   return AUTH_REQUIRED_PREFIXES.some(p => pathname.startsWith(p));
 }
 
-export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
+/** Splits a locale-prefixed pathname (e.g. "/es/dashboard") into its locale and the rest ("/dashboard"). */
+function splitLocale(pathname: string): { locale: string; rest: string } {
+  for (const locale of routing.locales) {
+    if (pathname === `/${locale}`) return { locale, rest: '/' };
+    if (pathname.startsWith(`/${locale}/`)) return { locale, rest: pathname.slice(locale.length + 1) };
+  }
+  return { locale: routing.defaultLocale, rest: pathname };
+}
 
+/**
+ * Runs after next-intl's middleware has already resolved the locale prefix —
+ * `response` carries that rewrite and must stay the response we return, so
+ * Supabase cookie writes land on it rather than a fresh NextResponse.
+ */
+export async function updateSession(request: NextRequest, response: NextResponse) {
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -48,13 +62,13 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
-          );
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options),
-          );
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              response.cookies.set(name, value, options),
+            );
+          } catch {
+            // Response already sent — ignore (mirrors server-component usage).
+          }
         },
       },
     },
@@ -64,26 +78,26 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const pathname = request.nextUrl.pathname;
+  const { locale, rest: pathname } = splitLocale(request.nextUrl.pathname);
 
   // Redirect logged-in users away from auth pages
   if (user && (pathname === '/login' || pathname === '/signup')) {
     const url = request.nextUrl.clone();
-    url.pathname = '/dashboard';
+    url.pathname = `/${locale}/dashboard`;
     return NextResponse.redirect(url);
   }
 
   // Only block access to explicitly auth-required routes
   if (!user && requiresAuth(pathname)) {
     const url = request.nextUrl.clone();
-    url.pathname = '/login';
+    url.pathname = `/${locale}/login`;
     url.searchParams.set('next', pathname);
     return NextResponse.redirect(url);
   }
 
-  // Pass current pathname to Server Components so the app layout can gate
-  // routes that require onboarding without an extra DB query in middleware.
-  supabaseResponse.headers.set('x-invoke-path', pathname);
+  // Pass the locale-stripped pathname to Server Components so the app layout
+  // can gate routes that require onboarding without an extra DB query.
+  response.headers.set('x-invoke-path', pathname);
 
-  return supabaseResponse;
+  return response;
 }

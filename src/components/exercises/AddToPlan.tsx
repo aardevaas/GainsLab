@@ -4,8 +4,8 @@ import { useEffect, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { Plus, Check, Loader2, CalendarPlus } from 'lucide-react';
 import { useToast } from '@/components/ui/toast/ToastProvider';
-import { getMyPlansForPicker, type PlanForPicker } from '@/app/(app)/exercises/actions';
-import { addExerciseToDay } from '@/app/(app)/workouts/actions';
+import { getMyPlansForPicker, type PlanForPicker } from '@/app/[locale]/(app)/exercises/actions';
+import { addExerciseToDay } from '@/app/[locale]/(app)/workouts/actions';
 
 type Props = {
   exerciseId: string;

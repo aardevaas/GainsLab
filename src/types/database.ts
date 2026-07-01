@@ -553,17 +553,19 @@ export type Database = {
           total_transformations: number;
           avg_client_rating: number | null;
           is_verified: boolean;
+          verification_tier: 'none' | 'verified' | 'pro' | 'elite';
           is_featured: boolean;
           is_accepting_clients: boolean;
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['creator_profiles']['Row'], 'id' | 'created_at' | 'updated_at' | 'total_clients' | 'total_transformations' | 'platform_cut_pct' | 'is_verified' | 'is_featured' | 'is_accepting_clients'> & {
+        Insert: Omit<Database['public']['Tables']['creator_profiles']['Row'], 'id' | 'created_at' | 'updated_at' | 'total_clients' | 'total_transformations' | 'platform_cut_pct' | 'is_verified' | 'verification_tier' | 'is_featured' | 'is_accepting_clients'> & {
           id?: string;
           platform_cut_pct?: number;
           total_clients?: number;
           total_transformations?: number;
           is_verified?: boolean;
+          verification_tier?: 'none' | 'verified' | 'pro' | 'elite';
           is_featured?: boolean;
           is_accepting_clients?: boolean;
         };
@@ -890,6 +892,78 @@ export type Database = {
         };
         Insert: Omit<Database['public']['Tables']['checkin_responses']['Row'], 'id' | 'submitted_at'> & { id?: string };
         Update: Partial<Database['public']['Tables']['checkin_responses']['Insert']>;
+        Relationships: [];
+      };
+      education_articles: {
+        Row: {
+          id: string;
+          slug: string;
+          title: string;
+          category: 'Nutrition' | 'Training' | 'Recovery' | 'Body Composition' | 'Myths';
+          summary: string;
+          reading_time: number;
+          key_takeaways: string[];
+          content: Json;
+          sources: string[];
+          is_published: boolean;
+          author_user_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['education_articles']['Row'], 'id' | 'created_at' | 'updated_at' | 'reading_time' | 'key_takeaways' | 'content' | 'sources' | 'is_published'> & {
+          id?: string; reading_time?: number; key_takeaways?: string[]; content?: Json; sources?: string[]; is_published?: boolean;
+        };
+        Update: Partial<Database['public']['Tables']['education_articles']['Insert']>;
+        Relationships: [];
+      };
+      supplements: {
+        Row: {
+          id: string;
+          slug: string;
+          name: string;
+          category: string;
+          goals: string[];
+          evidence: 'A' | 'B' | 'C' | 'D';
+          summary: string;
+          mechanism: string;
+          dosage: string;
+          timing: string;
+          notes: string | null;
+          price_tier: 'budget' | 'moderate' | 'premium';
+          is_published: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['supplements']['Row'], 'id' | 'created_at' | 'updated_at' | 'goals' | 'notes' | 'is_published'> & {
+          id?: string; goals?: string[]; notes?: string | null; is_published?: boolean;
+        };
+        Update: Partial<Database['public']['Tables']['supplements']['Insert']>;
+        Relationships: [];
+      };
+      wearable_connections: {
+        Row: {
+          id: string;
+          user_id: string;
+          provider: 'google_fit' | 'fitbit' | 'oura';
+          status: 'disconnected' | 'connected' | 'error';
+          access_token: string | null;
+          refresh_token: string | null;
+          token_expires_at: string | null;
+          last_synced_at: string | null;
+          last_error: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['wearable_connections']['Row'], 'id' | 'created_at' | 'updated_at' | 'status' | 'access_token' | 'refresh_token' | 'token_expires_at' | 'last_synced_at' | 'last_error'> & {
+          id?: string;
+          status?: 'disconnected' | 'connected' | 'error';
+          access_token?: string | null;
+          refresh_token?: string | null;
+          token_expires_at?: string | null;
+          last_synced_at?: string | null;
+          last_error?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['wearable_connections']['Insert']>;
         Relationships: [];
       };
     };

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { safeHttpUrl } from '@/lib/utils';
 
 async function refreshLikeCount(supabase: Awaited<ReturnType<typeof createClient>>, postId: string) {
   const { count } = await supabase
@@ -44,13 +45,19 @@ export async function createPost(
 
   if (!content.trim() && !videoUrl.trim()) return { error: 'Post cannot be empty.' };
 
+  // video_url renders as a raw <a href> to every community member — reject
+  // anything that isn't http(s) so a javascript: URL can't be stored.
+  const trimmedVideoUrl = videoUrl.trim();
+  const safeVideoUrl = trimmedVideoUrl ? safeHttpUrl(trimmedVideoUrl) : null;
+  if (trimmedVideoUrl && !safeVideoUrl) return { error: 'Video link must be a valid http(s) URL.' };
+
   const { error } = await supabase.from('community_posts').insert({
     community_id: communityId,
     author_user_id: user.id,
     content: content.trim() || null,
     image_urls: [],
-    video_url: videoUrl.trim() || null,
-    post_type: videoUrl.trim() ? 'video' : postType,
+    video_url: safeVideoUrl,
+    post_type: safeVideoUrl ? 'video' : postType,
   });
 
   if (error) return { error: error.message };
@@ -103,6 +110,9 @@ export async function deletePost(postId: string, communityId: string, slug?: str
 
 export async function togglePin(postId: string, current: boolean, slug?: string) {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Not authenticated' };
+
   const { error } = await supabase
     .from('community_posts')
     .update({ is_pinned: !current })

@@ -53,6 +53,8 @@ export type FoodLogEntry = {
   carbs_g: number;
   fat_g: number;
   fiber_g: number | null;
+  sodium_mg: number | null;
+  sugar_g: number | null;
   created_at: string;
 };
 
@@ -61,6 +63,9 @@ export type DayMacros = {
   proteinG: number;
   carbsG: number;
   fatG: number;
+  fiberG: number;
+  sodiumMg: number;
+  sugarG: number;
 };
 
 export function sumMacros(entries: FoodLogEntry[]): DayMacros {
@@ -70,8 +75,11 @@ export function sumMacros(entries: FoodLogEntry[]): DayMacros {
       proteinG: acc.proteinG + e.protein_g,
       carbsG: acc.carbsG + e.carbs_g,
       fatG: acc.fatG + e.fat_g,
+      fiberG: acc.fiberG + (e.fiber_g ?? 0),
+      sodiumMg: acc.sodiumMg + (e.sodium_mg ?? 0),
+      sugarG: acc.sugarG + (e.sugar_g ?? 0),
     }),
-    { calories: 0, proteinG: 0, carbsG: 0, fatG: 0 },
+    { calories: 0, proteinG: 0, carbsG: 0, fatG: 0, fiberG: 0, sodiumMg: 0, sugarG: 0 },
   );
 }
 
@@ -80,7 +88,7 @@ export function calcFoodMacros(
   quantity: number,
   unit: 'g' | 'oz' | 'serving',
   servingSizeG?: number,
-): { calories: number; proteinG: number; carbsG: number; fatG: number; fiberG: number } {
+): { calories: number; proteinG: number; carbsG: number; fatG: number; fiberG: number; sodiumMg: number; sugarG: number } {
   let grams = quantity;
   if (unit === 'oz') grams = quantity * 28.35;
   if (unit === 'serving' && servingSizeG) grams = quantity * servingSizeG;
@@ -91,5 +99,7 @@ export function calcFoodMacros(
     carbsG: Math.round(per100g.carbsG * factor * 10) / 10,
     fatG: Math.round(per100g.fatG * factor * 10) / 10,
     fiberG: Math.round(per100g.fiberG * factor * 10) / 10,
+    sodiumMg: Math.round((per100g.sodiumMg ?? 0) * factor),
+    sugarG: Math.round((per100g.sugarG ?? 0) * factor * 10) / 10,
   };
 }

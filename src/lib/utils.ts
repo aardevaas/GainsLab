@@ -49,3 +49,17 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
     timer = setTimeout(() => fn(...args), ms);
   };
 }
+
+/**
+ * Returns the URL unchanged if it's http(s), otherwise null. Use before
+ * persisting or rendering any user-supplied URL (social links, websites) —
+ * a `javascript:` scheme in an unvalidated href executes on click.
+ */
+export function safeHttpUrl(url: string): string | null {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? url : null;
+  } catch {
+    return null;
+  }
+}
